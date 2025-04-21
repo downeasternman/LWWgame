@@ -1,3 +1,5 @@
+import { characters } from './characters.js';
+
 export const additionalScenes = {
     beavers_house: {
         text: function() {

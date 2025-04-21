@@ -1,3 +1,5 @@
+import { characters } from './characters.js';
+
 // Import game systems
 import {
     additionalScenes,
@@ -579,8 +581,10 @@ const scenes = {
             }
         ]
     },
-    ...additionalScenes
 };
+
+// Merge additional scenes with base scenes
+Object.assign(scenes, additionalScenes);
 
 // Function to update the game display
 function updateScene() {
