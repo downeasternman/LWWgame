@@ -931,4 +931,116 @@ const questSystem = {
         }
         return inProgress;
     }
+};
+
+// Relationship System
+const relationshipSystem = {
+    relationships: {
+        peter: {
+            susan: 5,
+            edmund: 3,
+            lucy: 5,
+            tumnus: 0,
+            beavers: 0,
+            aslan: 0,
+            witch: 0
+        },
+        susan: {
+            peter: 5,
+            edmund: 3,
+            lucy: 5,
+            tumnus: 0,
+            beavers: 0,
+            aslan: 0,
+            witch: 0
+        },
+        edmund: {
+            peter: 3,
+            susan: 3,
+            lucy: 3,
+            tumnus: 0,
+            beavers: 0,
+            aslan: 0,
+            witch: 0
+        },
+        lucy: {
+            peter: 5,
+            susan: 5,
+            edmund: 3,
+            tumnus: 0,
+            beavers: 0,
+            aslan: 0,
+            witch: 0
+        }
+    },
+    
+    updateRelationship: function(character1, character2, value) {
+        if (this.relationships[character1] && this.relationships[character1][character2] !== undefined) {
+            this.relationships[character1][character2] = Math.max(-10, Math.min(10, 
+                this.relationships[character1][character2] + value));
+            return true;
+        }
+        return false;
+    },
+    
+    getRelationship: function(character1, character2) {
+        return this.relationships[character1]?.[character2] || 0;
+    },
+    
+    getRelationshipLevel: function(character1, character2) {
+        const value = this.getRelationship(character1, character2);
+        if (value >= 8) return "best friends";
+        if (value >= 5) return "friends";
+        if (value >= 2) return "acquaintances";
+        if (value >= -2) return "neutral";
+        if (value >= -5) return "unfriendly";
+        if (value >= -8) return "enemies";
+        return "mortal enemies";
+    },
+    
+    handleInteraction: function(character1, character2, interactionType) {
+        const modifiers = {
+            help: 2,
+            gift: 1,
+            fight: -3,
+            betray: -5,
+            save: 4,
+            insult: -2
+        };
+        
+        const modifier = modifiers[interactionType] || 0;
+        this.updateRelationship(character1, character2, modifier);
+        
+        // Some interactions affect both characters
+        if (interactionType === "help" || interactionType === "gift" || 
+            interactionType === "fight" || interactionType === "betray") {
+            this.updateRelationship(character2, character1, modifier);
+        }
+        
+        return this.getRelationshipLevel(character1, character2);
+    },
+    
+    checkAlliance: function(character1, character2) {
+        const relationship = this.getRelationship(character1, character2);
+        return relationship >= 5;
+    },
+    
+    checkEnmity: function(character1, character2) {
+        const relationship = this.getRelationship(character1, character2);
+        return relationship <= -5;
+    },
+    
+    getGroupRelationship: function(group1, group2) {
+        let total = 0;
+        let count = 0;
+        
+        for (const char1 of group1) {
+            for (const char2 of group2) {
+                total += this.getRelationship(char1, char2);
+                count++;
+            }
+        }
+        
+        return count > 0 ? total / count : 0;
+    }
 }; 
