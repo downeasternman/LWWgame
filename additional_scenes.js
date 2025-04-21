@@ -573,4 +573,102 @@ const inventorySystem = {
     getItemEffects: function(itemName) {
         return this.items[itemName]?.effects || {};
     }
+};
+
+// Character Stats System
+const characterStats = {
+    stats: {
+        peter: {
+            name: "Peter",
+            health: 100,
+            maxHealth: 100,
+            combat: 3,
+            leadership: 4,
+            courage: 4,
+            wisdom: 3,
+            inventory: []
+        },
+        susan: {
+            name: "Susan",
+            health: 100,
+            maxHealth: 100,
+            archery: 4,
+            diplomacy: 4,
+            wisdom: 4,
+            courage: 3,
+            inventory: []
+        },
+        edmund: {
+            name: "Edmund",
+            health: 100,
+            maxHealth: 100,
+            combat: 2,
+            stealth: 3,
+            wisdom: 2,
+            courage: 2,
+            inventory: []
+        },
+        lucy: {
+            name: "Lucy",
+            health: 100,
+            maxHealth: 100,
+            faith: 5,
+            kindness: 5,
+            wisdom: 3,
+            courage: 3,
+            inventory: []
+        }
+    },
+    
+    updateStat: function(character, stat, value) {
+        if (this.stats[character] && this.stats[character][stat] !== undefined) {
+            this.stats[character][stat] += value;
+            return true;
+        }
+        return false;
+    },
+    
+    getStat: function(character, stat) {
+        return this.stats[character]?.[stat] || 0;
+    },
+    
+    applyItemEffects: function(character, itemName) {
+        const effects = inventorySystem.getItemEffects(itemName);
+        for (const [stat, value] of Object.entries(effects)) {
+            this.updateStat(character, stat, value);
+        }
+    },
+    
+    removeItemEffects: function(character, itemName) {
+        const effects = inventorySystem.getItemEffects(itemName);
+        for (const [stat, value] of Object.entries(effects)) {
+            this.updateStat(character, stat, -value);
+        }
+    },
+    
+    checkHealth: function(character) {
+        return this.stats[character]?.health || 0;
+    },
+    
+    heal: function(character, amount) {
+        if (this.stats[character]) {
+            this.stats[character].health = Math.min(
+                this.stats[character].health + amount,
+                this.stats[character].maxHealth
+            );
+            return true;
+        }
+        return false;
+    },
+    
+    takeDamage: function(character, amount) {
+        if (this.stats[character]) {
+            this.stats[character].health = Math.max(
+                this.stats[character].health - amount,
+                0
+            );
+            return this.stats[character].health > 0;
+        }
+        return false;
+    }
 }; 
