@@ -567,7 +567,8 @@ const scenes = {
                 }
             }
         ]
-    }
+    },
+    ...additionalScenes
 };
 
 // Function to update the game display
