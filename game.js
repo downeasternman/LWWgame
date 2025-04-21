@@ -1,3 +1,14 @@
+// Import game systems
+const {
+    additionalScenes,
+    inventorySystem,
+    characterStats,
+    combatSystem,
+    questSystem,
+    relationshipSystem,
+    dialogueSystem
+} = require('./additional_scenes.js');
+
 // Game state
 let currentScene = 'character_selection';
 let selectedCharacter = null;

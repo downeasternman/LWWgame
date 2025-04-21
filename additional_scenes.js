@@ -1194,4 +1194,15 @@ const dialogueSystem = {
     hasDialogue: function(character, dialogueId) {
         return !!this.dialogues[character]?.[dialogueId];
     }
+};
+
+// Export all systems
+module.exports = {
+    additionalScenes,
+    inventorySystem,
+    characterStats,
+    combatSystem,
+    questSystem,
+    relationshipSystem,
+    dialogueSystem
 }; 
