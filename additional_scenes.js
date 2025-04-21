@@ -671,4 +671,78 @@ const characterStats = {
         }
         return false;
     }
+};
+
+// Combat System
+const combatSystem = {
+    calculateDamage: function(attacker, defender, weapon = null) {
+        const baseDamage = 10;
+        const attackBonus = characterStats.getStat(attacker, 'combat');
+        const defenseBonus = characterStats.getStat(defender, 'defense');
+        
+        if (weapon) {
+            const weaponEffects = inventorySystem.getItemEffects(weapon);
+            attackBonus += (weaponEffects.combat || 0);
+        }
+        
+        const damage = Math.max(1, baseDamage + attackBonus - defenseBonus);
+        return damage;
+    },
+    
+    performAttack: function(attacker, defender, weapon = null) {
+        const damage = this.calculateDamage(attacker, defender, weapon);
+        const isAlive = characterStats.takeDamage(defender, damage);
+        
+        return {
+            damage,
+            isAlive,
+            attacker: characterStats.stats[attacker].name,
+            defender: characterStats.stats[defender].name
+        };
+    },
+    
+    checkCombatOutcome: function(character1, character2) {
+        const health1 = characterStats.checkHealth(character1);
+        const health2 = characterStats.checkHealth(character2);
+        
+        if (health1 <= 0) return { winner: character2, loser: character1 };
+        if (health2 <= 0) return { winner: character1, loser: character2 };
+        return null;
+    },
+    
+    handleCombat: function(character1, character2, weapon1 = null, weapon2 = null) {
+        const combatLog = [];
+        
+        while (true) {
+            // Character 1 attacks
+            const attack1 = this.performAttack(character1, character2, weapon1);
+            combatLog.push(`${attack1.attacker} attacks ${attack1.defender} for ${attack1.damage} damage!`);
+            
+            // Check if combat is over
+            const outcome = this.checkCombatOutcome(character1, character2);
+            if (outcome) {
+                combatLog.push(`${characterStats.stats[outcome.winner].name} wins the battle!`);
+                return {
+                    winner: outcome.winner,
+                    loser: outcome.loser,
+                    log: combatLog
+                };
+            }
+            
+            // Character 2 attacks
+            const attack2 = this.performAttack(character2, character1, weapon2);
+            combatLog.push(`${attack2.attacker} attacks ${attack2.defender} for ${attack2.damage} damage!`);
+            
+            // Check if combat is over
+            const outcome2 = this.checkCombatOutcome(character1, character2);
+            if (outcome2) {
+                combatLog.push(`${characterStats.stats[outcome2.winner].name} wins the battle!`);
+                return {
+                    winner: outcome2.winner,
+                    loser: outcome2.loser,
+                    log: combatLog
+                };
+            }
+        }
+    }
 }; 
