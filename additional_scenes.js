@@ -199,4 +199,378 @@ const additionalScenes = {
             }
         ]
     }
+};
+
+// Side Quests
+const sideQuests = {
+    rescueTumnus: {
+        title: "Rescue Mr. Tumnus",
+        description: "Help Mr. Tumnus escape from the White Witch's prison",
+        requirements: {
+            items: ["lantern", "rope"],
+            relationships: {
+                tumnus: 3
+            }
+        },
+        scenes: {
+            start: {
+                text: "You hear rumors that Mr. Tumnus has been captured by the White Witch's forces. Will you attempt to rescue him?",
+                choices: [
+                    {
+                        text: "Gather information about his location",
+                        next: "gatherInfo",
+                        effects: {
+                            relationships: {
+                                tumnus: 1
+                            }
+                        }
+                    },
+                    {
+                        text: "Plan the rescue mission",
+                        next: "planRescue",
+                        requirements: {
+                            items: ["map"]
+                        }
+                    },
+                    {
+                        text: "Seek help from the Beavers",
+                        next: "beaverHelp",
+                        requirements: {
+                            relationships: {
+                                beavers: 2
+                            }
+                        }
+                    }
+                ]
+            },
+            gatherInfo: {
+                text: "You learn that Mr. Tumnus is being held in a secret prison near the White Witch's castle. The guards change shifts at midnight.",
+                choices: [
+                    {
+                        text: "Sneak in during the guard change",
+                        next: "sneakIn",
+                        requirements: {
+                            items: ["lantern"]
+                        }
+                    },
+                    {
+                        text: "Create a distraction to draw the guards away",
+                        next: "distraction",
+                        requirements: {
+                            items: ["fireworks"]
+                        }
+                    }
+                ]
+            },
+            // ... more scenes for the rescue quest ...
+        }
+    },
+    whiteStag: {
+        title: "The White Stag",
+        description: "Search for the legendary White Stag that grants wishes",
+        requirements: {
+            items: ["compass"],
+            relationships: {
+                aslan: 2
+            }
+        },
+        scenes: {
+            start: {
+                text: "Legends speak of a magical White Stag that roams the forests of Narnia. Would you like to search for it?",
+                choices: [
+                    {
+                        text: "Follow the ancient maps",
+                        next: "followMap",
+                        requirements: {
+                            items: ["map"]
+                        }
+                    },
+                    {
+                        text: "Ask the talking animals for help",
+                        next: "askAnimals",
+                        requirements: {
+                            relationships: {
+                                animals: 2
+                            }
+                        }
+                    }
+                ]
+            },
+            // ... more scenes for the White Stag quest ...
+        }
+    },
+    stoneTable: {
+        title: "The Stone Table",
+        description: "Investigate the mysterious Stone Table and its history",
+        requirements: {
+            items: ["lantern"],
+            relationships: {
+                aslan: 1
+            }
+        },
+        scenes: {
+            start: {
+                text: "The Stone Table holds ancient secrets about Narnia's history. Would you like to explore it?",
+                choices: [
+                    {
+                        text: "Study the ancient carvings",
+                        next: "studyCarvings",
+                        requirements: {
+                            items: ["notebook"]
+                        }
+                    },
+                    {
+                        text: "Search for hidden chambers",
+                        next: "hiddenChambers",
+                        requirements: {
+                            items: ["lantern"]
+                        }
+                    }
+                ]
+            },
+            // ... more scenes for the Stone Table quest ...
+        }
+    }
+};
+
+// Character Interactions
+const characterInteractions = {
+    beavers: {
+        name: "Mr. and Mrs. Beaver",
+        location: "Beaver's Dam",
+        interactions: {
+            firstMeeting: {
+                text: "The Beavers welcome you to their cozy dam. They seem to know a lot about Narnia.",
+                choices: [
+                    {
+                        text: "Ask about Aslan",
+                        next: "aslanInfo",
+                        effects: {
+                            relationships: {
+                                beavers: 1,
+                                aslan: 1
+                            }
+                        }
+                    },
+                    {
+                        text: "Help with dam repairs",
+                        next: "damRepairs",
+                        requirements: {
+                            items: ["tools"]
+                        }
+                    },
+                    {
+                        text: "Share a meal",
+                        next: "shareMeal",
+                        effects: {
+                            relationships: {
+                                beavers: 2
+                            }
+                        }
+                    }
+                ]
+            },
+            aslanInfo: {
+                text: "The Beavers tell you about Aslan's return and the prophecy.",
+                choices: [
+                    {
+                        text: "Ask about the prophecy",
+                        next: "prophecy",
+                        effects: {
+                            knowledge: ["prophecy"]
+                        }
+                    },
+                    {
+                        text: "Express doubts",
+                        next: "doubts",
+                        effects: {
+                            relationships: {
+                                beavers: -1
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    tumnus: {
+        name: "Mr. Tumnus",
+        location: "Tumnus's Cave",
+        interactions: {
+            firstMeeting: {
+                text: "Mr. Tumnus invites you for tea in his cozy cave.",
+                choices: [
+                    {
+                        text: "Accept the invitation",
+                        next: "teaParty",
+                        effects: {
+                            relationships: {
+                                tumnus: 2
+                            }
+                        }
+                    },
+                    {
+                        text: "Ask about Narnia",
+                        next: "narniaInfo",
+                        effects: {
+                            knowledge: ["narniaHistory"]
+                        }
+                    }
+                ]
+            },
+            teaParty: {
+                text: "Mr. Tumnus serves you tea and tells stories about Narnia.",
+                choices: [
+                    {
+                        text: "Listen to his stories",
+                        next: "stories",
+                        effects: {
+                            relationships: {
+                                tumnus: 1
+                            }
+                        }
+                    },
+                    {
+                        text: "Ask about the White Witch",
+                        next: "witchInfo",
+                        effects: {
+                            knowledge: ["witchInfo"]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    whiteWitch: {
+        name: "White Witch",
+        location: "Castle",
+        interactions: {
+            firstMeeting: {
+                text: "The White Witch appears before you, offering Turkish Delight.",
+                choices: [
+                    {
+                        text: "Accept the treat",
+                        next: "acceptTreat",
+                        effects: {
+                            relationships: {
+                                witch: 1
+                            },
+                            items: ["turkishDelight"]
+                        }
+                    },
+                    {
+                        text: "Refuse politely",
+                        next: "refuse",
+                        effects: {
+                            relationships: {
+                                witch: -1
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+};
+
+// Inventory System
+const inventorySystem = {
+    items: {
+        sword: {
+            name: "Peter's Sword",
+            description: "A magical sword given to Peter by Father Christmas",
+            type: "weapon",
+            effects: {
+                combat: 3,
+                confidence: 2
+            }
+        },
+        shield: {
+            name: "Peter's Shield",
+            description: "A sturdy shield with the image of a lion",
+            type: "armor",
+            effects: {
+                defense: 2,
+                confidence: 1
+            }
+        },
+        horn: {
+            name: "Susan's Horn",
+            description: "A magical horn that summons help when blown",
+            type: "magic",
+            effects: {
+                summonHelp: true
+            }
+        },
+        bow: {
+            name: "Susan's Bow",
+            description: "A magical bow that never misses its target",
+            type: "weapon",
+            effects: {
+                combat: 2,
+                accuracy: 3
+            }
+        },
+        cordial: {
+            name: "Lucy's Cordial",
+            description: "A magical healing potion",
+            type: "consumable",
+            effects: {
+                healing: 3
+            }
+        },
+        dagger: {
+            name: "Lucy's Dagger",
+            description: "A small but effective weapon",
+            type: "weapon",
+            effects: {
+                combat: 1,
+                stealth: 1
+            }
+        },
+        turkishDelight: {
+            name: "Turkish Delight",
+            description: "Magical candy from the White Witch",
+            type: "consumable",
+            effects: {
+                health: 1,
+                addiction: 1
+            }
+        },
+        tools: {
+            name: "Repair Tools",
+            description: "Tools for fixing things",
+            type: "utility",
+            effects: {
+                repair: 2
+            }
+        }
+    },
+    inventory: [],
+    maxSlots: 10,
+    
+    addItem: function(itemName) {
+        if (this.inventory.length < this.maxSlots) {
+            this.inventory.push(itemName);
+            return true;
+        }
+        return false;
+    },
+    
+    removeItem: function(itemName) {
+        const index = this.inventory.indexOf(itemName);
+        if (index > -1) {
+            this.inventory.splice(index, 1);
+            return true;
+        }
+        return false;
+    },
+    
+    hasItem: function(itemName) {
+        return this.inventory.includes(itemName);
+    },
+    
+    getItemEffects: function(itemName) {
+        return this.items[itemName]?.effects || {};
+    }
 }; 
