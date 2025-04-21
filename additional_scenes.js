@@ -1,4 +1,4 @@
-const additionalScenes = {
+export const additionalScenes = {
     beavers_house: {
         text: function() {
             const char = characters[selectedCharacter];
@@ -1198,7 +1198,6 @@ const dialogueSystem = {
 
 // Export all systems
 export {
-    additionalScenes,
     inventorySystem,
     characterStats,
     combatSystem,
