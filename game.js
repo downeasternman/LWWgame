@@ -1,4 +1,11 @@
 import { characters } from './characters.js';
+import {
+    currentScene,
+    selectedCharacter,
+    inventory,
+    relationships,
+    gameProgress
+} from './game_state.js';
 
 // Import game systems
 import {
@@ -10,30 +17,6 @@ import {
     relationshipSystem,
     dialogueSystem
 } from './additional_scenes.js';
-
-// Game state
-let currentScene = 'character_selection';
-let selectedCharacter = null;
-let inventory = [];
-let relationships = {
-    siblings: {
-        peter: 50,
-        susan: 50,
-        edmund: 50,
-        lucy: 50
-    },
-    tumnus: 0,
-    beaver: 0,
-    aslan: 0
-};
-let gameProgress = {
-    discoveredNarnia: false,
-    metTumnus: false,
-    metBeaver: false,
-    metAslan: false,
-    foundLampPost: false,
-    foundCairParavel: false
-};
 
 // Add these variables at the top with other game state variables
 const chessContainer = document.getElementById('chess-container');

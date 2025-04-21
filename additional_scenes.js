@@ -1,4 +1,5 @@
 import { characters } from './characters.js';
+import { selectedCharacter } from './game_state.js';
 
 export const additionalScenes = {
     beavers_house: {
