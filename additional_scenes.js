@@ -745,4 +745,190 @@ const combatSystem = {
             }
         }
     }
+};
+
+// Quest System
+const questSystem = {
+    quests: {
+        main: {
+            rescueTumnus: {
+                title: "Rescue Mr. Tumnus",
+                description: "Save Mr. Tumnus from the White Witch's prison",
+                status: "available",
+                requirements: {
+                    items: ["lantern", "rope"],
+                    relationships: {
+                        tumnus: 3
+                    }
+                },
+                rewards: {
+                    experience: 100,
+                    items: ["tumnusGift"],
+                    relationships: {
+                        tumnus: 5,
+                        beavers: 2
+                    }
+                }
+            },
+            meetAslan: {
+                title: "Meet Aslan",
+                description: "Journey to meet the great lion Aslan",
+                status: "locked",
+                requirements: {
+                    completedQuests: ["rescueTumnus"],
+                    relationships: {
+                        beavers: 3
+                    }
+                },
+                rewards: {
+                    experience: 200,
+                    items: ["aslanBlessing"],
+                    relationships: {
+                        aslan: 5
+                    }
+                }
+            },
+            defeatWitch: {
+                title: "Defeat the White Witch",
+                description: "Face the White Witch in the final battle",
+                status: "locked",
+                requirements: {
+                    completedQuests: ["meetAslan"],
+                    items: ["sword", "shield"],
+                    relationships: {
+                        aslan: 5
+                    }
+                },
+                rewards: {
+                    experience: 500,
+                    items: ["crown"],
+                    relationships: {
+                        narnia: 10
+                    }
+                }
+            }
+        },
+        side: {
+            helpBeavers: {
+                title: "Help the Beavers",
+                description: "Assist Mr. and Mrs. Beaver with their dam",
+                status: "available",
+                requirements: {
+                    items: ["tools"]
+                },
+                rewards: {
+                    experience: 50,
+                    items: ["beaverGift"],
+                    relationships: {
+                        beavers: 3
+                    }
+                }
+            },
+            findTurkishDelight: {
+                title: "Find Turkish Delight",
+                description: "Search for the magical Turkish Delight",
+                status: "available",
+                requirements: {
+                    stealth: 2
+                },
+                rewards: {
+                    experience: 30,
+                    items: ["turkishDelight"],
+                    relationships: {
+                        edmund: 2
+                    }
+                }
+            }
+        }
+    },
+    
+    checkRequirements: function(questId) {
+        const quest = this.quests.main[questId] || this.quests.side[questId];
+        if (!quest) return false;
+        
+        // Check item requirements
+        if (quest.requirements.items) {
+            for (const item of quest.requirements.items) {
+                if (!inventorySystem.hasItem(item)) return false;
+            }
+        }
+        
+        // Check relationship requirements
+        if (quest.requirements.relationships) {
+            for (const [character, level] of Object.entries(quest.requirements.relationships)) {
+                if (relationships[character] < level) return false;
+            }
+        }
+        
+        // Check completed quests requirements
+        if (quest.requirements.completedQuests) {
+            for (const requiredQuest of quest.requirements.completedQuests) {
+                if (this.quests.main[requiredQuest].status !== "completed") return false;
+            }
+        }
+        
+        return true;
+    },
+    
+    startQuest: function(questId) {
+        const quest = this.quests.main[questId] || this.quests.side[questId];
+        if (!quest || quest.status !== "available") return false;
+        
+        if (this.checkRequirements(questId)) {
+            quest.status = "inProgress";
+            return true;
+        }
+        return false;
+    },
+    
+    completeQuest: function(questId) {
+        const quest = this.quests.main[questId] || this.quests.side[questId];
+        if (!quest || quest.status !== "inProgress") return false;
+        
+        quest.status = "completed";
+        
+        // Apply rewards
+        if (quest.rewards.items) {
+            for (const item of quest.rewards.items) {
+                inventorySystem.addItem(item);
+            }
+        }
+        
+        if (quest.rewards.relationships) {
+            for (const [character, value] of Object.entries(quest.rewards.relationships)) {
+                relationships[character] += value;
+            }
+        }
+        
+        // Unlock dependent quests
+        for (const [id, otherQuest] of Object.entries(this.quests.main)) {
+            if (otherQuest.requirements.completedQuests?.includes(questId)) {
+                otherQuest.status = "available";
+            }
+        }
+        
+        return true;
+    },
+    
+    getAvailableQuests: function() {
+        const available = [];
+        for (const [id, quest] of Object.entries(this.quests.main)) {
+            if (quest.status === "available") available.push({ id, ...quest });
+        }
+        for (const [id, quest] of Object.entries(this.quests.side)) {
+            if (quest.status === "available") available.push({ id, ...quest });
+        }
+        return available;
+    },
+    
+    getInProgressQuests: function() {
+        const inProgress = [];
+        for (const [id, quest] of Object.entries(this.quests.main)) {
+            if (quest.status === "inProgress") inProgress.push({ id, ...quest });
+        }
+        for (const [id, quest] of Object.entries(this.quests.side)) {
+            if (quest.status === "inProgress") inProgress.push({ id, ...quest });
+        }
+        return inProgress;
+    }
 }; 
