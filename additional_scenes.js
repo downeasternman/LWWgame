@@ -1043,4 +1043,155 @@ const relationshipSystem = {
         
         return count > 0 ? total / count : 0;
     }
+};
+
+// Dialogue System
+const dialogueSystem = {
+    dialogues: {
+        tumnus: {
+            first_meeting: {
+                text: "Hello! I'm Mr. Tumnus, a faun. What brings you to Narnia?",
+                options: [
+                    {
+                        text: "I came through a wardrobe",
+                        response: "A wardrobe? How curious! Would you like to join me for tea?",
+                        effects: {
+                            relationship: 1,
+                            next: "tea_invitation"
+                        }
+                    },
+                    {
+                        text: "I'm lost",
+                        response: "Oh dear! Let me help you. My house is just nearby.",
+                        effects: {
+                            relationship: 1,
+                            next: "offer_help"
+                        }
+                    },
+                    {
+                        text: "What's a faun?",
+                        response: "We're creatures of the forest, half-man and half-goat.",
+                        effects: {
+                            knowledge: ["fauns"],
+                            next: "explain_narnia"
+                        }
+                    }
+                ]
+            },
+            tea_invitation: {
+                text: "My house is just around the corner. We'll have tea and cakes!",
+                options: [
+                    {
+                        text: "That sounds lovely",
+                        response: "Wonderful! Follow me!",
+                        effects: {
+                            relationship: 2,
+                            next: "at_tumnus_house"
+                        }
+                    },
+                    {
+                        text: "I should get back",
+                        response: "Oh... well, perhaps another time then.",
+                        effects: {
+                            relationship: -1,
+                            next: "end"
+                        }
+                    }
+                ]
+            }
+        },
+        beavers: {
+            first_meeting: {
+                text: "Psst! Over here! We need to talk about Aslan.",
+                options: [
+                    {
+                        text: "Who's Aslan?",
+                        response: "Why, he's the true king of Narnia! The great lion himself!",
+                        effects: {
+                            knowledge: ["aslan"],
+                            next: "explain_aslan"
+                        }
+                    },
+                    {
+                        text: "Why are we whispering?",
+                        response: "The trees have ears, and not all of them are on our side.",
+                        effects: {
+                            knowledge: ["spies"],
+                            next: "explain_danger"
+                        }
+                    }
+                ]
+            },
+            explain_aslan: {
+                text: "Aslan is on the move. The prophecy speaks of four children...",
+                options: [
+                    {
+                        text: "Tell me about the prophecy",
+                        response: "When Adam's flesh and Adam's bone sits at Cair Paravel in throne...",
+                        effects: {
+                            knowledge: ["prophecy"],
+                            next: "explain_prophecy"
+                        }
+                    },
+                    {
+                        text: "Is it safe to talk here?",
+                        response: "Come to our dam. We can speak freely there.",
+                        effects: {
+                            next: "invite_to_dam"
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    
+    startDialogue: function(character, dialogueId) {
+        const dialogue = this.dialogues[character]?.[dialogueId];
+        if (!dialogue) return null;
+        
+        return {
+            text: dialogue.text,
+            options: dialogue.options.map(opt => ({
+                text: opt.text,
+                id: this.dialogues[character]?.[opt.effects.next] ? opt.effects.next : null
+            }))
+        };
+    },
+    
+    selectOption: function(character, dialogueId, optionIndex) {
+        const dialogue = this.dialogues[character]?.[dialogueId];
+        if (!dialogue || !dialogue.options[optionIndex]) return null;
+        
+        const option = dialogue.options[optionIndex];
+        const effects = option.effects;
+        
+        // Apply relationship changes
+        if (effects.relationship) {
+            relationshipSystem.updateRelationship(selectedCharacter, character, effects.relationship);
+        }
+        
+        // Add knowledge
+        if (effects.knowledge) {
+            effects.knowledge.forEach(knowledge => {
+                // Assuming we have a knowledge system
+                // knowledgeSystem.addKnowledge(knowledge);
+            });
+        }
+        
+        return {
+            response: option.response,
+            nextDialogue: effects.next === "end" ? null : effects.next
+        };
+    },
+    
+    getAvailableDialogues: function(character) {
+        return Object.keys(this.dialogues[character] || {}).filter(dialogueId => {
+            // Add conditions for dialogue availability here
+            return true;
+        });
+    },
+    
+    hasDialogue: function(character, dialogueId) {
+        return !!this.dialogues[character]?.[dialogueId];
+    }
 }; 
