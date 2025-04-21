@@ -54,7 +54,8 @@ Each character has unique abilities that can be used in specific situations:
 ## Technical Requirements
 
 - Modern web browser with JavaScript enabled
-- No additional installations required
+- Node.js (version 14 or higher)
+- npm (Node Package Manager)
 - Internet connection (for chess mini-game feature)
 
 ## Installation
@@ -63,8 +64,19 @@ Each character has unique abilities that can be used in specific situations:
    ```bash
    git clone https://github.com/downeasternman/LWWgame.git
    ```
-2. Open `index.html` in your web browser
-3. Start your adventure!
+2. Navigate to the project directory:
+   ```bash
+   cd LWWgame
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the development server:
+   ```bash
+   npm start
+   ```
+5. Open your browser and navigate to `http://localhost:3000`
 
 ## Development
 
@@ -72,6 +84,7 @@ The game is built using:
 - HTML5
 - CSS3
 - Vanilla JavaScript
+- Node.js/Express (for local development server)
 - Lichess API (for chess mini-game)
 
 File Structure:
@@ -79,6 +92,8 @@ File Structure:
 - `game.js`: Core game logic and scenes
 - `styles.css`: Game styling
 - `additional_scenes.js`: Extended story content
+- `server.js`: Express server for local development
+- `package.json`: Project dependencies and scripts
 
 ## Contributing
 
