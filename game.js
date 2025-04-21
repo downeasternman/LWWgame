@@ -1,11 +1,5 @@
 import { characters } from './characters.js';
-import {
-    currentScene,
-    selectedCharacter,
-    inventory,
-    relationships,
-    gameProgress
-} from './game_state.js';
+import './game_state.js'; // Import to initialize game state
 
 // Import game systems
 import {
@@ -38,17 +32,17 @@ const scenes = {
             text: `${char.name}: ${char.description}\nTraits: ${char.traits.join(", ")}\nSpecial Ability: ${char.specialAbility}`,
             nextScene: "start",
             onSelect: () => {
-                selectedCharacter = key;
+                window.selectedCharacter = key;
                 return `You have chosen to be ${char.name}. ${char.description}`;
             }
         }))
     },
     start: {
         text: function() {
-            if (!selectedCharacter || !characters[selectedCharacter]) {
+            if (!window.selectedCharacter || !characters[window.selectedCharacter]) {
                 return "Please select a character to begin your adventure.";
             }
-            const char = characters[selectedCharacter];
+            const char = characters[window.selectedCharacter];
             return `You are ${char.name} Pevensie, ${char.description.toLowerCase()} You and your siblings have been sent to live with Professor Kirke in his mysterious country house during World War II. One rainy day, while exploring the house, you discover a spare room with nothing in it but a large wardrobe...`;
         },
         choices: [
@@ -56,7 +50,7 @@ const scenes = {
                 text: "Open the wardrobe and step inside",
                 nextScene: "wardrobe",
                 onSelect: () => {
-                    gameProgress.discoveredNarnia = true;
+                    window.gameProgress.discoveredNarnia = true;
                     return "You step into the wardrobe, feeling the soft fur coats brush against your skin...";
                 }
             },
@@ -71,7 +65,7 @@ const scenes = {
     },
     wardrobe: {
         text: function() {
-            const char = characters[selectedCharacter];
+            const char = characters[window.selectedCharacter];
             return `As you step into the wardrobe, you feel something strange. The coats seem to be getting thicker and softer. You push further in, and suddenly you find yourself standing in a snowy forest. The air is crisp and cold, and you can see your breath in front of you. In the distance, you notice a lamppost glowing in the middle of the woods. ${char.name === 'lucy' ? 'Your heart races with excitement at this magical discovery.' : 'You can hardly believe what you\'re seeing.'}`;
         },
         choices: [
@@ -79,7 +73,7 @@ const scenes = {
                 text: "Approach the lamppost",
                 nextScene: "lamppost",
                 onSelect: () => {
-                    gameProgress.foundLampPost = true;
+                    window.gameProgress.foundLampPost = true;
                     return "You walk towards the mysterious lamppost, your footsteps crunching in the snow...";
                 }
             },
@@ -94,7 +88,7 @@ const scenes = {
     },
     lamppost: {
         text: function() {
-            const char = characters[selectedCharacter];
+            const char = characters[window.selectedCharacter];
             return `As you approach the lamppost, you hear a rustling in the bushes. A small figure emerges - it's a faun! He introduces himself as Mr. Tumnus and invites you to his home for tea. ${char.name === 'lucy' ? 'You feel an immediate connection with this kind creature.' : 'You\'re cautious but intrigued by this strange being.'}`;
         },
         choices: [
@@ -102,8 +96,8 @@ const scenes = {
                 text: "Accept Mr. Tumnus's invitation",
                 nextScene: "tea_with_tumnus",
                 onSelect: () => {
-                    gameProgress.metTumnus = true;
-                    relationships.tumnus += 20;
+                    window.gameProgress.metTumnus = true;
+                    window.relationships.tumnus += 20;
                     return "You follow Mr. Tumnus through the snowy forest to his cozy home...";
                 }
             },
@@ -384,7 +378,7 @@ const scenes = {
     },
     journey_to_aslan: {
         text: function() {
-            const char = characters[selectedCharacter];
+            const char = characters[window.selectedCharacter];
             return `The journey to Aslan's camp is long and dangerous. You must avoid the White Witch's patrols and cross frozen rivers. ${char.name === 'peter' ? 'You take charge of the group, ensuring everyone stays safe.' : char.name === 'susan' ? 'You use your wisdom to help navigate the dangers.' : char.name === 'edmund' ? 'You struggle with doubts but keep going.' : 'Your faith keeps you going through the difficult journey.'}`;
         },
         choices: [
@@ -400,6 +394,59 @@ const scenes = {
                 nextScene: "shortcut_danger",
                 onSelect: () => {
                     return "You decide to take a riskier path...";
+                }
+            }
+        ]
+    },
+    shortcut_danger: {
+        text: function() {
+            const char = characters[window.selectedCharacter];
+            return `As you take the shortcut through the woods, you encounter a group of the White Witch's wolves! ${char.name === 'peter' ? 'You quickly organize a defense.' : char.name === 'susan' ? 'You look for a way to outsmart them.' : char.name === 'edmund' ? 'You consider running away.' : 'You stand your ground bravely.'}`;
+        },
+        choices: [
+            {
+                text: "Fight the wolves",
+                nextScene: "wolf_battle",
+                onSelect: () => {
+                    return "You prepare to face the wolves...";
+                }
+            },
+            {
+                text: "Try to sneak past them",
+                nextScene: "sneak_past",
+                onSelect: () => {
+                    return "You attempt to move quietly through the trees...";
+                }
+            }
+        ]
+    },
+    wolf_battle: {
+        text: function() {
+            const char = characters[window.selectedCharacter];
+            return `The battle with the wolves is fierce! ${char.name === 'peter' ? 'You lead the charge against them.' : char.name === 'susan' ? 'You use your bow to keep them at bay.' : char.name === 'edmund' ? 'You fight with determination.' : 'You defend your siblings bravely.'}`;
+        },
+        choices: [
+            {
+                text: "Continue to Aslan's camp",
+                nextScene: "aslans_camp",
+                onSelect: () => {
+                    window.gameProgress.defeatedWolves = true;
+                    return "After defeating the wolves, you continue your journey...";
+                }
+            }
+        ]
+    },
+    sneak_past: {
+        text: function() {
+            const char = characters[window.selectedCharacter];
+            return `You manage to sneak past the wolves undetected. ${char.name === 'peter' ? 'You guide your siblings safely through.' : char.name === 'susan' ? 'Your careful planning pays off.' : char.name === 'edmund' ? 'You feel relieved to have avoided a fight.' : 'You\'re proud of your stealth skills.'}`;
+        },
+        choices: [
+            {
+                text: "Continue to Aslan's camp",
+                nextScene: "aslans_camp",
+                onSelect: () => {
+                    return "You continue your journey to Aslan's camp...";
                 }
             }
         ]
@@ -543,7 +590,7 @@ Object.assign(scenes, additionalScenes);
 
 // Function to update the game display
 function updateScene() {
-    const scene = scenes[currentScene];
+    const scene = scenes[window.currentScene];
     const storyText = document.getElementById('story-text');
     const choicesDiv = document.getElementById('choices');
 
@@ -572,7 +619,7 @@ function updateScene() {
                     return;
                 }
             }
-            currentScene = choice.nextScene;
+            window.currentScene = choice.nextScene;
             updateScene();
         };
         choicesDiv.appendChild(button);
