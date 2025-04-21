@@ -1197,7 +1197,7 @@ const dialogueSystem = {
 };
 
 // Export all systems
-module.exports = {
+export {
     additionalScenes,
     inventorySystem,
     characterStats,

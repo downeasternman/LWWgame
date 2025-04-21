@@ -1,5 +1,5 @@
 // Import game systems
-const {
+import {
     additionalScenes,
     inventorySystem,
     characterStats,
@@ -7,7 +7,7 @@ const {
     questSystem,
     relationshipSystem,
     dialogueSystem
-} = require('./additional_scenes.js');
+} from './additional_scenes.js';
 
 // Game state
 let currentScene = 'character_selection';
