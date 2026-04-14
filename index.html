@@ -3,27 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Lion, the Witch, and the Wardrobe - Chapter 1</title>
+    <title>The Lion, the Witch, and the Wardrobe - Interactive Adventure</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://lichess.org/css/embed.css">
 </head>
 <body>
     <div class="game-container">
         <h1>The Lion, the Witch, and the Wardrobe</h1>
-        <div id="story-text" class="story-text">
+        <div class="toolbar">
+            <button type="button" id="btn-save" class="toolbar-btn">Save game</button>
+            <button type="button" id="btn-load" class="toolbar-btn">Load saved game</button>
+            <button type="button" id="btn-reset" class="toolbar-btn">New story</button>
+        </div>
+        <div id="game-hud" class="game-hud" aria-live="polite"></div>
+        <div id="story-text" class="story-text" role="region" aria-live="polite" aria-relevant="additions text">
             <!-- Story content will be dynamically inserted here -->
         </div>
-        <div id="choices" class="choices">
+        <div id="choices" class="choices" role="group" aria-label="Story choices">
             <!-- Choice buttons will be dynamically inserted here -->
         </div>
     </div>
 
     <div id="chess-container" class="chess-container hidden">
-        <button id="close-chess" class="close-chess">Return to Game</button>
+        <button type="button" id="close-chess" class="close-chess">Return to Game</button>
         <div id="chess-board" class="lichess-board"></div>
     </div>
 
     <script src="https://lichess.org/js/embed.js"></script>
     <script type="module" src="game.js"></script>
 </body>
-</html> 
+</html>

@@ -1,566 +1,432 @@
 import { characters } from './characters.js';
-import { selectedCharacter } from './game_state.js';
+import { gameState } from './game_state.js';
 
+function sel() {
+    return gameState.selectedCharacter;
+}
+
+function ch() {
+    return characters[sel()];
+}
+
+/** Scenes not defined in game.js (extensions + fixes for previously missing keys). */
 export const additionalScenes = {
-    beavers_house: {
-        text: function() {
-            const char = characters[selectedCharacter];
-            return `As you approach the house, a kind-looking beaver pokes his head out. "Hello there!" he says cheerfully. "I'm Mr. Beaver, and this is my wife, Mrs. Beaver." They invite you inside for a warm meal. ${char.name === 'lucy' ? 'You immediately feel at home with these friendly creatures.' : 'You\'re cautious but intrigued by these talking animals.'}`;
+    return: {
+        text: function () {
+            return `You push back through the fur coats. The wardrobe taps against your fingertips; then you stumble out into the spare room, breathless. For a moment the wood smells only of wood—not of snow.`;
         },
         choices: [
             {
-                text: "Accept their invitation",
-                nextScene: "beavers_story",
+                text: 'Catch your breath, then go find the others',
+                nextScene: 'return_to_house',
                 onSelect: () => {
-                    relationships.beaver += 20;
-                    return "You step inside the cozy beaver home...";
+                    return 'You smooth your hair and try to look as if nothing astonishing has happened.';
                 }
             },
             {
-                text: "Ask about the White Witch",
-                nextScene: "witch_info",
+                text: 'Step into Narnia again',
+                nextScene: 'wardrobe',
                 onSelect: () => {
-                    return "The Beavers look around nervously before speaking...";
+                    return 'You take one breath of English air, then turn back toward the coats.';
                 }
             }
         ]
     },
-    beavers_story: {
-        text: function() {
-            const char = characters[selectedCharacter];
-            return `Over a warm meal, the Beavers tell you about Aslan, the true king of Narnia, and how he's returning to defeat the White Witch. ${char.name === 'peter' ? 'You feel a sense of responsibility to help.' : char.name === 'susan' ? 'You\'re skeptical but intrigued.' : char.name === 'edmund' ? 'You\'re not sure what to believe.' : 'You believe in Aslan with all your heart.'}`;
+    witch_info: {
+        text: function () {
+            const c = ch();
+            return `The Beavers speak in low voices. "The White Witch is the one who made it always winter and never Christmas," Mr. Beaver says. Mrs. Beaver glances at the window. "There are listeners in these woods—not all ears are friendly." ${c && c.name === 'susan' ? 'You feel the weight of what they are not saying.' : 'The room feels smaller.'}`;
         },
         choices: [
             {
-                text: "Ask to meet Aslan",
-                nextScene: "journey_to_aslan",
+                text: 'Ask what can be done',
+                nextScene: 'beavers_story',
                 onSelect: () => {
-                    gameProgress.metAslan = true;
-                    return "The Beavers agree to take you to meet Aslan...";
+                    gameState.relationships.beaver += 5;
+                    return '"Aslan is on the move," Mr. Beaver whispers. "That changes everything."';
                 }
             },
             {
-                text: "Return to tell your siblings",
-                nextScene: "return_with_news",
+                text: 'Suggest leaving at once',
+                nextScene: 'journey_to_aslan',
                 onSelect: () => {
-                    return "You thank the Beavers and head back to the wardrobe...";
+                    gameState.gameProgress.metAslan = true;
+                    return 'You pack up courage like a parcel and prepare to go.';
                 }
             }
         ]
     },
-    journey_to_aslan: {
-        text: function() {
-            const char = characters[selectedCharacter];
-            return `The journey to Aslan's camp is long and dangerous. You must avoid the White Witch's patrols and cross frozen rivers. ${char.name === 'peter' ? 'You take charge of the group, ensuring everyone stays safe.' : char.name === 'susan' ? 'You use your wisdom to help navigate the dangers.' : char.name === 'edmund' ? 'You struggle with doubts but keep going.' : 'Your faith keeps you going through the difficult journey.'}`;
+    return_with_news: {
+        text: function () {
+            return `You thank the Beavers and pick your way back through snow to the wardrobe route you know. The house, when you reach it, still smells of rain and old books—waiting, as if no time has passed at all.`;
         },
         choices: [
             {
-                text: "Continue the journey",
-                nextScene: "aslans_camp",
+                text: 'Tell your siblings what you heard',
+                nextScene: 'siblings',
                 onSelect: () => {
-                    return "You press on through the snow...";
+                    return 'You gather them and speak quietly. Even the furniture seems to lean in.';
                 }
             },
             {
-                text: "Take a shortcut through the woods",
-                nextScene: "shortcut_danger",
+                text: 'Keep the news to yourself one more day',
+                nextScene: 'secret',
                 onSelect: () => {
-                    return "You decide to take a riskier path...";
+                    gameState.secretHesitation += 1;
+                    return 'The words stick in your throat. Tomorrow, you tell yourself. Tomorrow.';
                 }
             }
         ]
     },
-    aslans_camp: {
-        text: function() {
-            const char = characters[selectedCharacter];
-            return `You finally reach Aslan's camp. The great lion himself welcomes you. ${char.name === 'peter' ? 'You feel a deep sense of responsibility.' : char.name === 'susan' ? 'You\'re in awe of his wisdom.' : char.name === 'edmund' ? 'You feel both fear and hope.' : 'You feel pure joy at meeting the great lion.'}`;
+    prophecy_reveal: {
+        text: function () {
+            const c = ch();
+            return `Aslan’s voice is not loud, but it stills the camp. "When Adam’s flesh and Adam’s bone sits at Cair Paravel in throne, the evil time will be over and done." ${c && c.name === 'lucy' ? 'You feel the truth of it in your bones.' : 'You try to hold all the pieces together in your mind.'}`;
         },
         choices: [
             {
-                text: "Ask about the prophecy",
-                nextScene: "prophecy_reveal",
+                text: 'Ask what must happen next',
+                nextScene: 'father_christmas_arrives',
                 onSelect: () => {
-                    return "Aslan explains the ancient prophecy...";
-                }
-            },
-            {
-                text: "Offer to help in the battle",
-                nextScene: "battle_preparation",
-                onSelect: () => {
-                    return "Aslan accepts your offer and begins preparing you for battle...";
+                    return 'The air itself seems to wait for his answer.';
                 }
             }
         ]
     },
-    battle_preparation: {
-        text: function() {
-            const char = characters[selectedCharacter];
-            return `Aslan and his army prepare for the final battle against the White Witch. ${char.name === 'peter' ? 'You\'re given command of a unit.' : char.name === 'susan' ? 'You\'re assigned to the archers.' : char.name === 'edmund' ? 'You\'re given a special mission.' : 'You help tend to the wounded.'}`;
+    father_christmas_arrives: {
+        text: function () {
+            const id = sel();
+            if (!gameState.gameProgress.receivedChristmasGifts) {
+                if (id === 'peter') {
+                    inventorySystem.addItem('sword');
+                    inventorySystem.addItem('shield');
+                    characterStats.applyItemEffects('peter', 'sword');
+                    characterStats.applyItemEffects('peter', 'shield');
+                } else if (id === 'susan') {
+                    inventorySystem.addItem('horn');
+                    inventorySystem.addItem('bow');
+                    characterStats.applyItemEffects('susan', 'bow');
+                } else if (id === 'lucy') {
+                    inventorySystem.addItem('cordial');
+                    inventorySystem.addItem('dagger');
+                    characterStats.applyItemEffects('lucy', 'dagger');
+                } else if (id === 'edmund') {
+                    /* Edmund’s true gifts are later—cordial may heal him after the battle */
+                    characterStats.updateStat('edmund', 'courage', 1);
+                }
+                gameState.gameProgress.receivedChristmasGifts = true;
+            }
+            const c = ch();
+            const giftLine =
+                id === 'peter'
+                    ? 'You receive sword and shield—heavy with meaning, bright with promise.'
+                    : id === 'susan'
+                      ? 'A horn and a bow: call for help, and strike true.'
+                      : id === 'lucy'
+                        ? 'Cordial and dagger: heal the hurt, guard the small.'
+                        : 'You stand empty-handed for a moment—and then understand that mercy has already been given.';
+            return `A sleigh bells’ jingle—not witch-sleigh bells, but honest ones—cuts through the cold. Father Christmas is here. ${giftLine} ${c && c.name === 'peter' ? 'Your fingers close on hilt and shield-rim as if they were always meant to.' : ''}`;
         },
         choices: [
             {
-                text: "Lead the charge",
-                nextScene: "final_battle",
+                text: 'Go forward to what awaits',
+                nextScene: 'stone_table_march',
                 onSelect: () => {
-                    return "You prepare to face the White Witch's army...";
-                }
-            },
-            {
-                text: "Support from the rear",
-                nextScene: "battle_support",
-                onSelect: () => {
-                    return "You take up a supporting position...";
+                    return 'Spring is not here yet—but something is moving.';
                 }
             }
         ]
     },
-    final_battle: {
-        text: function() {
-            const char = characters[selectedCharacter];
-            return `The battle is fierce, but with Aslan's help, you emerge victorious. The White Witch is defeated, and spring returns to Narnia. ${char.name === 'peter' ? 'Your leadership was crucial to the victory.' : char.name === 'susan' ? 'Your wisdom guided many to safety.' : char.name === 'edmund' ? 'Your redemption is complete.' : 'Your faith inspired others.'}`;
+    stone_table_march: {
+        text: function () {
+            gameState.gameProgress.witnessedStoneTable = true;
+            return `The Stone Table stands on a green hill, older than old. The Witch’s voice is thin and terrible; the law she quotes feels like a chain. And yet Aslan does not flinch when the bargain turns toward Edmund’s life—and toward deeper magic than she knows.`;
         },
         choices: [
             {
-                text: "Attend the coronation",
-                nextScene: "coronation",
+                text: 'Watch what unfolds',
+                nextScene: 'stone_table_sacrifice',
                 onSelect: () => {
-                    return "You prepare for your coronation as a king/queen of Narnia...";
-                }
-            },
-            {
-                text: "Explore the newly freed Narnia",
-                nextScene: "spring_exploration",
-                onSelect: () => {
-                    return "You set out to see Narnia in spring...";
+                    return 'You cannot look away. The air tastes of thunder and grief.';
                 }
             }
         ]
     },
-    coronation: {
-        text: function() {
-            const char = characters[selectedCharacter];
-            return `At Cair Paravel, you and your siblings are crowned as the Kings and Queens of Narnia. ${char.name === 'peter' ? 'You are crowned High King Peter the Magnificent.' : char.name === 'susan' ? 'You are crowned Queen Susan the Gentle.' : char.name === 'edmund' ? 'You are crowned King Edmund the Just.' : 'You are crowned Queen Lucy the Valiant.'}`;
+    stone_table_sacrifice: {
+        text: function () {
+            return `What happens on the Table is too great for loud words. When it is over, the world feels wrong—until morning, when the Table cracks and hope returns in a roar of breath and light. "If the Witch knew the whole story," someone whispers, "perhaps she would have been more careful."`;
         },
         choices: [
             {
-                text: "Begin your reign",
-                nextScene: "narnia_rule",
+                text: 'Rise with the dawn',
+                nextScene: 'maugrim_duel',
                 onSelect: () => {
-                    return "You take up your responsibilities as a ruler of Narnia...";
-                }
-            },
-            {
-                text: "Return to the wardrobe",
-                nextScene: "return_home",
-                onSelect: () => {
-                    return "You decide to check on the wardrobe...";
+                    gameState.edmundPath = 'redeemed';
+                    return 'There is no time to stand still. Narnia still needs you.';
                 }
             }
         ]
     },
-    narnia_rule: {
-        text: function() {
-            const char = characters[selectedCharacter];
-            return `As a ruler of Narnia, you face many challenges and opportunities. ${char.name === 'peter' ? 'You establish just laws and protect the borders.' : char.name === 'susan' ? 'You promote peace and diplomacy.' : char.name === 'edmund' ? 'You ensure justice is served fairly.' : 'You spread joy and kindness throughout the land.'}`;
+    maugrim_duel: {
+        text: function () {
+            const weapon = inventorySystem.hasItem('sword') ? 'sword' : inventorySystem.hasItem('dagger') ? 'dagger' : null;
+            characterStats.stats.peter.health = characterStats.stats.peter.maxHealth;
+            characterStats.stats.maugrim.health = characterStats.stats.maugrim.maxHealth;
+            const peterFight = combatSystem.handleCombat('peter', 'maugrim', weapon || undefined, null);
+            const summary = peterFight.log.slice(0, 4).join(' ');
+            gameState.gameProgress.maugrimDefeated = true;
+            characterStats.heal('peter', 15);
+            return `Maugrim lunges—wolf-hot breath, cruel speed. Peter meets him ${weapon ? 'steel in hand' : 'with desperate courage'}. ${summary} The pack falters when its captain falls.`;
         },
         choices: [
             {
-                text: "Continue ruling Narnia",
-                nextScene: "narnia_rule",
+                text: 'Press on to the great battle',
+                nextScene: 'battle_preparation',
                 onSelect: () => {
-                    return "You continue your reign, making Narnia a better place...";
-                }
-            },
-            {
-                text: "Return to the wardrobe",
-                nextScene: "return_home",
-                onSelect: () => {
-                    return "You decide to check on the wardrobe...";
+                    return 'Horns and paws and hooves: the army gathers.';
                 }
             }
         ]
     },
-    return_home: {
-        text: function() {
-            const char = characters[selectedCharacter];
-            return `You return to the wardrobe, only to find that time has barely passed in the real world. ${char.name === 'peter' ? 'You know you must return to Narnia one day.' : char.name === 'susan' ? 'You wonder if it was all a dream.' : char.name === 'edmund' ? 'You know the truth of Narnia in your heart.' : 'You can\'t wait to tell your siblings about your adventure.'}`;
+    battle_support: {
+        text: function () {
+            const c = ch();
+            return `You hold the line from the rear—binding wounds, shouting warnings, steadying those who falter. ${c && c.name === 'susan' ? 'Your horn is cold against your side; you use it once, and help answers.' : 'The battle noise rolls over you like surf.'}`;
         },
         choices: [
             {
-                text: "Tell your siblings about Narnia",
-                nextScene: "siblings",
+                text: 'Move to where you are needed most',
+                nextScene: 'final_battle',
                 onSelect: () => {
-                    return "You gather your siblings to tell them about Narnia...";
+                    return 'You find the place that fits your hands.';
+                }
+            }
+        ]
+    },
+    spring_exploration: {
+        text: function () {
+            gameState.gameProgress.foundCairParavel = true;
+            const c = ch();
+            return `Narnia in spring is almost too bright after endless winter. Rivers shout; trees unclench their fingers. ${c && c.name === 'lucy' ? 'You laugh without meaning to.' : 'You walk carefully, as if the world might vanish.'}`;
+        },
+        choices: [
+            {
+                text: 'Return for the coronation',
+                nextScene: 'coronation',
+                onSelect: () => {
+                    return 'Cair Paravel waits on its eastern sea.';
+                }
+            }
+        ]
+    },
+    narnia_explore: {
+        text: function () {
+            return `You and Mr. Tumnus take a longer way: a frozen waterfall like a stopped shout, a stand of trees where the snow thins. Everywhere there are stories if you know how to listen.`;
+        },
+        choices: [
+            {
+                text: 'Ask Tumnus about the Beavers’ dam',
+                nextScene: 'beavers_house',
+                onSelect: () => {
+                    gameState.gameProgress.metBeaver = true;
+                    gameState.relationships.tumnus += 5;
+                    return '"Friends of mine," he says. "You’ll be safe with them."';
                 }
             },
             {
-                text: "Keep it to yourself for now",
-                nextScene: "secret",
+                text: 'Return toward the lamppost',
+                nextScene: 'lamppost',
                 onSelect: () => {
-                    return "You decide to keep your adventure a secret for now...";
+                    return 'The lamppost’s glow steadies you like a promise.';
+                }
+            }
+        ]
+    },
+    edmund_temptation_start: {
+        text: function () {
+            return `You told yourself you only wanted to see. But the snow stings your pride, and the Witch’s sleigh glides up as if summoned by sulking. She offers warmth, praise, and a little box: Turkish Delight, sweet enough to make you forget your own name for a while.`;
+        },
+        choices: [
+            {
+                text: 'Eat the Turkish Delight',
+                nextScene: 'edmund_after_delight',
+                onSelect: () => {
+                    gameState.edmundPath = 'tempted';
+                    gameState.relationships.witch += 15;
+                    inventorySystem.addItem('turkishDelight');
+                    characterStats.updateStat('edmund', 'courage', -1);
+                    return 'It is all sweetness and no nourishment. You want more. You always want more.';
+                }
+            },
+            {
+                text: 'Refuse and step back',
+                nextScene: 'wardrobe',
+                onSelect: () => {
+                    gameState.relationships.witch -= 5;
+                    return 'Your mouth waters, but you turn away. The sleigh slides off into the grey.';
+                }
+            }
+        ]
+    },
+    edmund_after_delight: {
+        text: function () {
+            return `The Witch’s promises settle into you like a chill: throne, power, never being smallest again. You know you should go home—and you will. Later.`;
+        },
+        choices: [
+            {
+                text: 'Return to the lamppost and your siblings’ path',
+                nextScene: 'lamppost',
+                onSelect: () => {
+                    return 'You wipe crumbs from your mittens and hurry, already rehearsing lies.';
+                }
+            }
+        ]
+    },
+    edmund_betrayal_night: {
+        text: function () {
+            return `That night at the Beavers’ house, shame and craving pull you in opposite directions. When the others sleep, you slip out. The snow remembers your footsteps too well.`;
+        },
+        choices: [
+            {
+                text: 'Go to the Witch',
+                nextScene: 'edmund_at_witch_castle',
+                onSelect: () => {
+                    gameState.edmundPath = 'betrayed';
+                    gameState.relationships.aslan -= 5;
+                    return 'Her castle rises ahead—iron and ice.';
+                }
+            },
+            {
+                text: 'Stay',
+                nextScene: 'journey_to_aslan',
+                onSelect: () => {
+                    gameState.edmundPath = 'redeemed';
+                    return 'You clench your fists until your hands hurt, and stay.';
+                }
+            }
+        ]
+    },
+    edmund_at_witch_castle: {
+        text: function () {
+            return `Courtyard, dungeon, fear: you are not a king here. You are a bargaining chip. When Aslan’s name is spoken, you flinch—because you remember, now, what you traded away.`;
+        },
+        choices: [
+            {
+                text: 'Wait for what must come',
+                nextScene: 'aslans_camp',
+                onSelect: () => {
+                    gameState.gameProgress.metAslan = true;
+                    return 'Rescue, when it comes, does not feel like victory at first. It feels like mercy.';
+                }
+            }
+        ]
+    },
+    epilogue_wardrobe: {
+        text: function () {
+            const c = ch();
+            return `Back through the wardrobe: coats, mothballs, England. Time has barely stirred. ${c && c.name === 'lucy' ? 'You glance at your sister and realize, with a shock, that you are taller than you were—or she is shorter—or both.' : 'You touch the wooden door and wonder which world is the dream.'}`;
+        },
+        choices: [
+            {
+                text: 'Speak to the Professor about what happened',
+                nextScene: 'professor_closing',
+                onSelect: () => {
+                    return 'He listens as if odd stories are the most ordinary thing in the world.';
+                }
+            },
+            {
+                text: 'Play again (reset story)',
+                nextScene: 'character_selection',
+                onSelect: () => {
+                    return 'The wardrobe waits for the next time.';
+                }
+            }
+        ]
+    },
+    professor_closing: {
+        text: function () {
+            return `The Professor’s face is hard to read. "How do you know," he asks mildly, "which of your friends would not have said much the same?" You leave the room less certain of everything—and more certain of one thing: the wardrobe will be waiting.`;
+        },
+        choices: [
+            {
+                text: 'Play again',
+                nextScene: 'character_selection',
+                onSelect: () => {
+                    return 'A new telling begins.';
                 }
             }
         ]
     }
 };
 
-// Side Quests
-const sideQuests = {
-    rescueTumnus: {
-        title: "Rescue Mr. Tumnus",
-        description: "Help Mr. Tumnus escape from the White Witch's prison",
-        requirements: {
-            items: ["lantern", "rope"],
-            relationships: {
-                tumnus: 3
-            }
-        },
-        scenes: {
-            start: {
-                text: "You hear rumors that Mr. Tumnus has been captured by the White Witch's forces. Will you attempt to rescue him?",
-                choices: [
-                    {
-                        text: "Gather information about his location",
-                        next: "gatherInfo",
-                        effects: {
-                            relationships: {
-                                tumnus: 1
-                            }
-                        }
-                    },
-                    {
-                        text: "Plan the rescue mission",
-                        next: "planRescue",
-                        requirements: {
-                            items: ["map"]
-                        }
-                    },
-                    {
-                        text: "Seek help from the Beavers",
-                        next: "beaverHelp",
-                        requirements: {
-                            relationships: {
-                                beavers: 2
-                            }
-                        }
-                    }
-                ]
-            },
-            gatherInfo: {
-                text: "You learn that Mr. Tumnus is being held in a secret prison near the White Witch's castle. The guards change shifts at midnight.",
-                choices: [
-                    {
-                        text: "Sneak in during the guard change",
-                        next: "sneakIn",
-                        requirements: {
-                            items: ["lantern"]
-                        }
-                    },
-                    {
-                        text: "Create a distraction to draw the guards away",
-                        next: "distraction",
-                        requirements: {
-                            items: ["fireworks"]
-                        }
-                    }
-                ]
-            },
-            // ... more scenes for the rescue quest ...
-        }
-    },
-    whiteStag: {
-        title: "The White Stag",
-        description: "Search for the legendary White Stag that grants wishes",
-        requirements: {
-            items: ["compass"],
-            relationships: {
-                aslan: 2
-            }
-        },
-        scenes: {
-            start: {
-                text: "Legends speak of a magical White Stag that roams the forests of Narnia. Would you like to search for it?",
-                choices: [
-                    {
-                        text: "Follow the ancient maps",
-                        next: "followMap",
-                        requirements: {
-                            items: ["map"]
-                        }
-                    },
-                    {
-                        text: "Ask the talking animals for help",
-                        next: "askAnimals",
-                        requirements: {
-                            relationships: {
-                                animals: 2
-                            }
-                        }
-                    }
-                ]
-            },
-            // ... more scenes for the White Stag quest ...
-        }
-    },
-    stoneTable: {
-        title: "The Stone Table",
-        description: "Investigate the mysterious Stone Table and its history",
-        requirements: {
-            items: ["lantern"],
-            relationships: {
-                aslan: 1
-            }
-        },
-        scenes: {
-            start: {
-                text: "The Stone Table holds ancient secrets about Narnia's history. Would you like to explore it?",
-                choices: [
-                    {
-                        text: "Study the ancient carvings",
-                        next: "studyCarvings",
-                        requirements: {
-                            items: ["notebook"]
-                        }
-                    },
-                    {
-                        text: "Search for hidden chambers",
-                        next: "hiddenChambers",
-                        requirements: {
-                            items: ["lantern"]
-                        }
-                    }
-                ]
-            },
-            // ... more scenes for the Stone Table quest ...
-        }
-    }
-};
-
-// Character Interactions
-const characterInteractions = {
-    beavers: {
-        name: "Mr. and Mrs. Beaver",
-        location: "Beaver's Dam",
-        interactions: {
-            firstMeeting: {
-                text: "The Beavers welcome you to their cozy dam. They seem to know a lot about Narnia.",
-                choices: [
-                    {
-                        text: "Ask about Aslan",
-                        next: "aslanInfo",
-                        effects: {
-                            relationships: {
-                                beavers: 1,
-                                aslan: 1
-                            }
-                        }
-                    },
-                    {
-                        text: "Help with dam repairs",
-                        next: "damRepairs",
-                        requirements: {
-                            items: ["tools"]
-                        }
-                    },
-                    {
-                        text: "Share a meal",
-                        next: "shareMeal",
-                        effects: {
-                            relationships: {
-                                beavers: 2
-                            }
-                        }
-                    }
-                ]
-            },
-            aslanInfo: {
-                text: "The Beavers tell you about Aslan's return and the prophecy.",
-                choices: [
-                    {
-                        text: "Ask about the prophecy",
-                        next: "prophecy",
-                        effects: {
-                            knowledge: ["prophecy"]
-                        }
-                    },
-                    {
-                        text: "Express doubts",
-                        next: "doubts",
-                        effects: {
-                            relationships: {
-                                beavers: -1
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-    },
-    tumnus: {
-        name: "Mr. Tumnus",
-        location: "Tumnus's Cave",
-        interactions: {
-            firstMeeting: {
-                text: "Mr. Tumnus invites you for tea in his cozy cave.",
-                choices: [
-                    {
-                        text: "Accept the invitation",
-                        next: "teaParty",
-                        effects: {
-                            relationships: {
-                                tumnus: 2
-                            }
-                        }
-                    },
-                    {
-                        text: "Ask about Narnia",
-                        next: "narniaInfo",
-                        effects: {
-                            knowledge: ["narniaHistory"]
-                        }
-                    }
-                ]
-            },
-            teaParty: {
-                text: "Mr. Tumnus serves you tea and tells stories about Narnia.",
-                choices: [
-                    {
-                        text: "Listen to his stories",
-                        next: "stories",
-                        effects: {
-                            relationships: {
-                                tumnus: 1
-                            }
-                        }
-                    },
-                    {
-                        text: "Ask about the White Witch",
-                        next: "witchInfo",
-                        effects: {
-                            knowledge: ["witchInfo"]
-                        }
-                    }
-                ]
-            }
-        }
-    },
-    whiteWitch: {
-        name: "White Witch",
-        location: "Castle",
-        interactions: {
-            firstMeeting: {
-                text: "The White Witch appears before you, offering Turkish Delight.",
-                choices: [
-                    {
-                        text: "Accept the treat",
-                        next: "acceptTreat",
-                        effects: {
-                            relationships: {
-                                witch: 1
-                            },
-                            items: ["turkishDelight"]
-                        }
-                    },
-                    {
-                        text: "Refuse politely",
-                        next: "refuse",
-                        effects: {
-                            relationships: {
-                                witch: -1
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-    }
-};
-
-// Inventory System
-const inventorySystem = {
+// --- Inventory ---
+export const inventorySystem = {
     items: {
+        wooden_lion: {
+            name: 'Carved wooden lion',
+            description: 'A small gift from Mr. Tumnus',
+            type: 'charm',
+            effects: { faith: 1 }
+        },
         sword: {
             name: "Peter's Sword",
-            description: "A magical sword given to Peter by Father Christmas",
-            type: "weapon",
-            effects: {
-                combat: 3,
-                confidence: 2
-            }
+            description: 'Rhindon—gift of Father Christmas',
+            type: 'weapon',
+            effects: { combat: 3, confidence: 2 }
         },
         shield: {
             name: "Peter's Shield",
-            description: "A sturdy shield with the image of a lion",
-            type: "armor",
-            effects: {
-                defense: 2,
-                confidence: 1
-            }
+            description: 'Sturdy, with a red lion',
+            type: 'armor',
+            effects: { defense: 2, confidence: 1 }
         },
         horn: {
             name: "Susan's Horn",
-            description: "A magical horn that summons help when blown",
-            type: "magic",
-            effects: {
-                summonHelp: true
-            }
+            description: 'Summons help when blown',
+            type: 'magic',
+            effects: { summonHelp: 1 }
         },
         bow: {
             name: "Susan's Bow",
-            description: "A magical bow that never misses its target",
-            type: "weapon",
-            effects: {
-                combat: 2,
-                accuracy: 3
-            }
+            description: 'Straight and true',
+            type: 'weapon',
+            effects: { combat: 2, accuracy: 3 }
         },
         cordial: {
             name: "Lucy's Cordial",
-            description: "A magical healing potion",
-            type: "consumable",
-            effects: {
-                healing: 3
-            }
+            description: 'Heals wound and pain',
+            type: 'consumable',
+            effects: { healing: 3 }
         },
         dagger: {
             name: "Lucy's Dagger",
-            description: "A small but effective weapon",
-            type: "weapon",
-            effects: {
-                combat: 1,
-                stealth: 1
-            }
+            description: 'Small but sharp',
+            type: 'weapon',
+            effects: { combat: 1, stealth: 1 }
         },
         turkishDelight: {
-            name: "Turkish Delight",
-            description: "Magical candy from the White Witch",
-            type: "consumable",
-            effects: {
-                health: 1,
-                addiction: 1
-            }
+            name: 'Turkish Delight',
+            description: 'Enchanted sweetness from the Witch',
+            type: 'consumable',
+            effects: { health: 1, addiction: 1 }
         },
         tools: {
-            name: "Repair Tools",
-            description: "Tools for fixing things",
-            type: "utility",
-            effects: {
-                repair: 2
-            }
+            name: 'Repair Tools',
+            description: 'For dam repairs',
+            type: 'utility',
+            effects: { repair: 2 }
         }
     },
     inventory: [],
-    maxSlots: 10,
-    
-    addItem: function(itemName) {
-        if (this.inventory.length < this.maxSlots) {
-            this.inventory.push(itemName);
-            return true;
-        }
-        return false;
+    maxSlots: 14,
+    addItem: function (itemName) {
+        if (!this.items[itemName]) return false;
+        if (this.inventory.length >= this.maxSlots) return false;
+        if (this.inventory.includes(itemName)) return true;
+        this.inventory.push(itemName);
+        return true;
     },
-    
-    removeItem: function(itemName) {
+    removeItem: function (itemName) {
         const index = this.inventory.indexOf(itemName);
         if (index > -1) {
             this.inventory.splice(index, 1);
@@ -568,134 +434,79 @@ const inventorySystem = {
         }
         return false;
     },
-    
-    hasItem: function(itemName) {
+    hasItem: function (itemName) {
         return this.inventory.includes(itemName);
     },
-    
-    getItemEffects: function(itemName) {
+    getItemEffects: function (itemName) {
         return this.items[itemName]?.effects || {};
     }
 };
 
-// Character Stats System
-const characterStats = {
+export const characterStats = {
     stats: {
-        peter: {
-            name: "Peter",
-            health: 100,
-            maxHealth: 100,
-            combat: 3,
-            leadership: 4,
-            courage: 4,
-            wisdom: 3,
-            inventory: []
-        },
-        susan: {
-            name: "Susan",
-            health: 100,
-            maxHealth: 100,
-            archery: 4,
-            diplomacy: 4,
-            wisdom: 4,
-            courage: 3,
-            inventory: []
-        },
-        edmund: {
-            name: "Edmund",
-            health: 100,
-            maxHealth: 100,
-            combat: 2,
-            stealth: 3,
-            wisdom: 2,
-            courage: 2,
-            inventory: []
-        },
-        lucy: {
-            name: "Lucy",
-            health: 100,
-            maxHealth: 100,
-            faith: 5,
-            kindness: 5,
-            wisdom: 3,
-            courage: 3,
-            inventory: []
-        }
+        peter: { name: 'Peter', health: 100, maxHealth: 100, combat: 3, leadership: 4, courage: 4, wisdom: 3, defense: 2 },
+        susan: { name: 'Susan', health: 100, maxHealth: 100, combat: 2, archery: 4, diplomacy: 4, wisdom: 4, courage: 3, defense: 1 },
+        edmund: { name: 'Edmund', health: 100, maxHealth: 100, combat: 2, stealth: 3, wisdom: 2, courage: 2, defense: 1 },
+        lucy: { name: 'Lucy', health: 100, maxHealth: 100, combat: 1, faith: 5, kindness: 5, wisdom: 3, courage: 3, defense: 0 },
+        maugrim: { name: 'Maugrim', health: 80, maxHealth: 80, combat: 4, defense: 2 }
     },
-    
-    updateStat: function(character, stat, value) {
+    updateStat: function (character, stat, value) {
         if (this.stats[character] && this.stats[character][stat] !== undefined) {
             this.stats[character][stat] += value;
             return true;
         }
         return false;
     },
-    
-    getStat: function(character, stat) {
+    getStat: function (character, stat) {
         return this.stats[character]?.[stat] || 0;
     },
-    
-    applyItemEffects: function(character, itemName) {
+    applyItemEffects: function (character, itemName) {
         const effects = inventorySystem.getItemEffects(itemName);
         for (const [stat, value] of Object.entries(effects)) {
+            if (stat === 'healing' || stat === 'summonHelp' || stat === 'addiction' || stat === 'health') continue;
             this.updateStat(character, stat, value);
         }
     },
-    
-    removeItemEffects: function(character, itemName) {
+    removeItemEffects: function (character, itemName) {
         const effects = inventorySystem.getItemEffects(itemName);
         for (const [stat, value] of Object.entries(effects)) {
+            if (stat === 'healing' || stat === 'summonHelp' || stat === 'addiction' || stat === 'health') continue;
             this.updateStat(character, stat, -value);
         }
     },
-    
-    checkHealth: function(character) {
+    checkHealth: function (character) {
         return this.stats[character]?.health || 0;
     },
-    
-    heal: function(character, amount) {
+    heal: function (character, amount) {
         if (this.stats[character]) {
-            this.stats[character].health = Math.min(
-                this.stats[character].health + amount,
-                this.stats[character].maxHealth
-            );
+            this.stats[character].health = Math.min(this.stats[character].health + amount, this.stats[character].maxHealth);
             return true;
         }
         return false;
     },
-    
-    takeDamage: function(character, amount) {
+    takeDamage: function (character, amount) {
         if (this.stats[character]) {
-            this.stats[character].health = Math.max(
-                this.stats[character].health - amount,
-                0
-            );
+            this.stats[character].health = Math.max(this.stats[character].health - amount, 0);
             return this.stats[character].health > 0;
         }
         return false;
     }
 };
 
-// Combat System
-const combatSystem = {
-    calculateDamage: function(attacker, defender, weapon = null) {
-        const baseDamage = 10;
-        const attackBonus = characterStats.getStat(attacker, 'combat');
-        const defenseBonus = characterStats.getStat(defender, 'defense');
-        
+export const combatSystem = {
+    calculateDamage: function (attacker, defender, weapon = null) {
+        let power = 8 + characterStats.getStat(attacker, 'combat');
+        const soak = characterStats.getStat(defender, 'defense') + Math.floor(characterStats.getStat(defender, 'combat') / 2);
         if (weapon) {
-            const weaponEffects = inventorySystem.getItemEffects(weapon);
-            attackBonus += (weaponEffects.combat || 0);
+            const w = inventorySystem.getItemEffects(weapon);
+            power += w.combat || 0;
+            power += w.accuracy || 0;
         }
-        
-        const damage = Math.max(1, baseDamage + attackBonus - defenseBonus);
-        return damage;
+        return Math.max(1, power - soak);
     },
-    
-    performAttack: function(attacker, defender, weapon = null) {
+    performAttack: function (attacker, defender, weapon = null) {
         const damage = this.calculateDamage(attacker, defender, weapon);
         const isAlive = characterStats.takeDamage(defender, damage);
-        
         return {
             damage,
             isAlive,
@@ -703,508 +514,174 @@ const combatSystem = {
             defender: characterStats.stats[defender].name
         };
     },
-    
-    checkCombatOutcome: function(character1, character2) {
-        const health1 = characterStats.checkHealth(character1);
-        const health2 = characterStats.checkHealth(character2);
-        
-        if (health1 <= 0) return { winner: character2, loser: character1 };
-        if (health2 <= 0) return { winner: character1, loser: character2 };
+    checkCombatOutcome: function (character1, character2) {
+        const h1 = characterStats.checkHealth(character1);
+        const h2 = characterStats.checkHealth(character2);
+        if (h1 <= 0) return { winner: character2, loser: character1 };
+        if (h2 <= 0) return { winner: character1, loser: character2 };
         return null;
     },
-    
-    handleCombat: function(character1, character2, weapon1 = null, weapon2 = null) {
-        const combatLog = [];
-        
-        while (true) {
-            // Character 1 attacks
-            const attack1 = this.performAttack(character1, character2, weapon1);
-            combatLog.push(`${attack1.attacker} attacks ${attack1.defender} for ${attack1.damage} damage!`);
-            
-            // Check if combat is over
-            const outcome = this.checkCombatOutcome(character1, character2);
-            if (outcome) {
-                combatLog.push(`${characterStats.stats[outcome.winner].name} wins the battle!`);
-                return {
-                    winner: outcome.winner,
-                    loser: outcome.loser,
-                    log: combatLog
-                };
+    handleCombat: function (character1, character2, weapon1 = null, weapon2 = null) {
+        const log = [];
+        let rounds = 0;
+        while (rounds < 12) {
+            rounds++;
+            const a1 = this.performAttack(character1, character2, weapon1);
+            log.push(`${a1.attacker} strikes ${a1.defender} for ${a1.damage} damage.`);
+            const o = this.checkCombatOutcome(character1, character2);
+            if (o) {
+                log.push(`${characterStats.stats[o.winner].name} prevails.`);
+                return { winner: o.winner, loser: o.loser, log };
             }
-            
-            // Character 2 attacks
-            const attack2 = this.performAttack(character2, character1, weapon2);
-            combatLog.push(`${attack2.attacker} attacks ${attack2.defender} for ${attack2.damage} damage!`);
-            
-            // Check if combat is over
-            const outcome2 = this.checkCombatOutcome(character1, character2);
-            if (outcome2) {
-                combatLog.push(`${characterStats.stats[outcome2.winner].name} wins the battle!`);
-                return {
-                    winner: outcome2.winner,
-                    loser: outcome2.loser,
-                    log: combatLog
-                };
+            const a2 = this.performAttack(character2, character1, weapon2);
+            log.push(`${a2.attacker} strikes ${a2.defender} for ${a2.damage} damage.`);
+            const o2 = this.checkCombatOutcome(character1, character2);
+            if (o2) {
+                log.push(`${characterStats.stats[o2.winner].name} prevails.`);
+                return { winner: o2.winner, loser: o2.loser, log };
             }
         }
+        log.push('The fight breaks off as reinforcements arrive.');
+        return { winner: character1, loser: character2, log };
     }
 };
 
-// Quest System
-const questSystem = {
+export const questSystem = {
     quests: {
         main: {
-            rescueTumnus: {
-                title: "Rescue Mr. Tumnus",
-                description: "Save Mr. Tumnus from the White Witch's prison",
-                status: "available",
-                requirements: {
-                    items: ["lantern", "rope"],
-                    relationships: {
-                        tumnus: 3
-                    }
-                },
-                rewards: {
-                    experience: 100,
-                    items: ["tumnusGift"],
-                    relationships: {
-                        tumnus: 5,
-                        beavers: 2
-                    }
-                }
-            },
             meetAslan: {
-                title: "Meet Aslan",
-                description: "Journey to meet the great lion Aslan",
-                status: "locked",
-                requirements: {
-                    completedQuests: ["rescueTumnus"],
-                    relationships: {
-                        beavers: 3
-                    }
-                },
-                rewards: {
-                    experience: 200,
-                    items: ["aslanBlessing"],
-                    relationships: {
-                        aslan: 5
-                    }
-                }
+                title: 'Reach Aslan’s camp',
+                description: 'Follow the prophecy toward the true King',
+                status: 'available',
+                requirements: {},
+                rewards: { relationships: { aslan: 10 } }
             },
             defeatWitch: {
-                title: "Defeat the White Witch",
-                description: "Face the White Witch in the final battle",
-                status: "locked",
-                requirements: {
-                    completedQuests: ["meetAslan"],
-                    items: ["sword", "shield"],
-                    relationships: {
-                        aslan: 5
-                    }
-                },
-                rewards: {
-                    experience: 500,
-                    items: ["crown"],
-                    relationships: {
-                        narnia: 10
-                    }
-                }
+                title: 'Break the endless winter',
+                description: 'Face the White Witch’s power',
+                status: 'locked',
+                requirements: { completedQuests: ['meetAslan'], relationships: { aslan: 5 } },
+                rewards: { relationships: { aslan: 20 } }
             }
         },
         side: {
             helpBeavers: {
-                title: "Help the Beavers",
-                description: "Assist Mr. and Mrs. Beaver with their dam",
-                status: "available",
-                requirements: {
-                    items: ["tools"]
-                },
-                rewards: {
-                    experience: 50,
-                    items: ["beaverGift"],
-                    relationships: {
-                        beavers: 3
-                    }
-                }
-            },
-            findTurkishDelight: {
-                title: "Find Turkish Delight",
-                description: "Search for the magical Turkish Delight",
-                status: "available",
-                requirements: {
-                    stealth: 2
-                },
-                rewards: {
-                    experience: 30,
-                    items: ["turkishDelight"],
-                    relationships: {
-                        edmund: 2
-                    }
-                }
+                title: 'Help the Beavers',
+                description: 'Earn trust at the dam',
+                status: 'available',
+                requirements: {},
+                rewards: { relationships: { beaver: 15 } }
             }
         }
     },
-    
-    checkRequirements: function(questId) {
+    checkRequirements: function (questId) {
         const quest = this.quests.main[questId] || this.quests.side[questId];
         if (!quest) return false;
-        
-        // Check item requirements
+        const rel = gameState.relationships;
         if (quest.requirements.items) {
             for (const item of quest.requirements.items) {
                 if (!inventorySystem.hasItem(item)) return false;
             }
         }
-        
-        // Check relationship requirements
         if (quest.requirements.relationships) {
-            for (const [character, level] of Object.entries(quest.requirements.relationships)) {
-                if (relationships[character] < level) return false;
+            for (const [key, level] of Object.entries(quest.requirements.relationships)) {
+                const v = rel[key];
+                if (v === undefined || v < level) return false;
             }
         }
-        
-        // Check completed quests requirements
         if (quest.requirements.completedQuests) {
-            for (const requiredQuest of quest.requirements.completedQuests) {
-                if (this.quests.main[requiredQuest].status !== "completed") return false;
+            for (const rq of quest.requirements.completedQuests) {
+                if (!gameState.completedQuestIds.includes(rq)) return false;
             }
         }
-        
         return true;
     },
-    
-    startQuest: function(questId) {
+    startQuest: function (questId) {
         const quest = this.quests.main[questId] || this.quests.side[questId];
-        if (!quest || quest.status !== "available") return false;
-        
+        if (!quest || quest.status !== 'available') return false;
         if (this.checkRequirements(questId)) {
-            quest.status = "inProgress";
+            quest.status = 'inProgress';
+            gameState.activeQuestId = questId;
             return true;
         }
         return false;
     },
-    
-    completeQuest: function(questId) {
+    completeQuest: function (questId) {
         const quest = this.quests.main[questId] || this.quests.side[questId];
-        if (!quest || quest.status !== "inProgress") return false;
-        
-        quest.status = "completed";
-        
-        // Apply rewards
-        if (quest.rewards.items) {
-            for (const item of quest.rewards.items) {
-                inventorySystem.addItem(item);
+        if (!quest) return false;
+        if (gameState.completedQuestIds.includes(questId)) return false;
+        quest.status = 'completed';
+        gameState.completedQuestIds.push(questId);
+        if (quest.rewards && quest.rewards.relationships) {
+            for (const [k, value] of Object.entries(quest.rewards.relationships)) {
+                if (gameState.relationships[k] !== undefined) gameState.relationships[k] += value;
             }
         }
-        
-        if (quest.rewards.relationships) {
-            for (const [character, value] of Object.entries(quest.rewards.relationships)) {
-                relationships[character] += value;
-            }
+        if (questId === 'meetAslan' && this.quests.main.defeatWitch) {
+            this.quests.main.defeatWitch.status = 'available';
         }
-        
-        // Unlock dependent quests
-        for (const [id, otherQuest] of Object.entries(this.quests.main)) {
-            if (otherQuest.requirements.completedQuests?.includes(questId)) {
-                otherQuest.status = "available";
-            }
-        }
-        
         return true;
     },
-    
-    getAvailableQuests: function() {
-        const available = [];
-        for (const [id, quest] of Object.entries(this.quests.main)) {
-            if (quest.status === "available") available.push({ id, ...quest });
+    getAvailableQuests: function () {
+        const out = [];
+        for (const [id, q] of Object.entries(this.quests.main)) {
+            if (q.status === 'available') out.push({ id, ...q });
         }
-        for (const [id, quest] of Object.entries(this.quests.side)) {
-            if (quest.status === "available") available.push({ id, ...quest });
+        for (const [id, q] of Object.entries(this.quests.side)) {
+            if (q.status === 'available') out.push({ id, ...q });
         }
-        return available;
-    },
-    
-    getInProgressQuests: function() {
-        const inProgress = [];
-        for (const [id, quest] of Object.entries(this.quests.main)) {
-            if (quest.status === "inProgress") inProgress.push({ id, ...quest });
-        }
-        for (const [id, quest] of Object.entries(this.quests.side)) {
-            if (quest.status === "inProgress") inProgress.push({ id, ...quest });
-        }
-        return inProgress;
+        return out;
     }
 };
 
-// Relationship System
-const relationshipSystem = {
-    relationships: {
-        peter: {
-            susan: 5,
-            edmund: 3,
-            lucy: 5,
-            tumnus: 0,
-            beavers: 0,
-            aslan: 0,
-            witch: 0
-        },
-        susan: {
-            peter: 5,
-            edmund: 3,
-            lucy: 5,
-            tumnus: 0,
-            beavers: 0,
-            aslan: 0,
-            witch: 0
-        },
-        edmund: {
-            peter: 3,
-            susan: 3,
-            lucy: 3,
-            tumnus: 0,
-            beavers: 0,
-            aslan: 0,
-            witch: 0
-        },
-        lucy: {
-            peter: 5,
-            susan: 5,
-            edmund: 3,
-            tumnus: 0,
-            beavers: 0,
-            aslan: 0,
-            witch: 0
-        }
-    },
-    
-    updateRelationship: function(character1, character2, value) {
-        if (this.relationships[character1] && this.relationships[character1][character2] !== undefined) {
-            this.relationships[character1][character2] = Math.max(-10, Math.min(10, 
-                this.relationships[character1][character2] + value));
-            return true;
-        }
-        return false;
-    },
-    
-    getRelationship: function(character1, character2) {
-        return this.relationships[character1]?.[character2] || 0;
-    },
-    
-    getRelationshipLevel: function(character1, character2) {
-        const value = this.getRelationship(character1, character2);
-        if (value >= 8) return "best friends";
-        if (value >= 5) return "friends";
-        if (value >= 2) return "acquaintances";
-        if (value >= -2) return "neutral";
-        if (value >= -5) return "unfriendly";
-        if (value >= -8) return "enemies";
-        return "mortal enemies";
-    },
-    
-    handleInteraction: function(character1, character2, interactionType) {
-        const modifiers = {
-            help: 2,
-            gift: 1,
-            fight: -3,
-            betray: -5,
-            save: 4,
-            insult: -2
-        };
-        
-        const modifier = modifiers[interactionType] || 0;
-        this.updateRelationship(character1, character2, modifier);
-        
-        // Some interactions affect both characters
-        if (interactionType === "help" || interactionType === "gift" || 
-            interactionType === "fight" || interactionType === "betray") {
-            this.updateRelationship(character2, character1, modifier);
-        }
-        
-        return this.getRelationshipLevel(character1, character2);
-    },
-    
-    checkAlliance: function(character1, character2) {
-        const relationship = this.getRelationship(character1, character2);
-        return relationship >= 5;
-    },
-    
-    checkEnmity: function(character1, character2) {
-        const relationship = this.getRelationship(character1, character2);
-        return relationship <= -5;
-    },
-    
-    getGroupRelationship: function(group1, group2) {
-        let total = 0;
-        let count = 0;
-        
-        for (const char1 of group1) {
-            for (const char2 of group2) {
-                total += this.getRelationship(char1, char2);
-                count++;
-            }
-        }
-        
-        return count > 0 ? total / count : 0;
+export const relationshipSystem = {
+    updateSiblingTrust: function (who, delta) {
+        const s = gameState.relationships.siblings;
+        if (s[who] !== undefined) s[who] = Math.max(0, Math.min(100, s[who] + delta));
     }
 };
 
-// Dialogue System
-const dialogueSystem = {
-    dialogues: {
-        tumnus: {
-            first_meeting: {
-                text: "Hello! I'm Mr. Tumnus, a faun. What brings you to Narnia?",
-                options: [
-                    {
-                        text: "I came through a wardrobe",
-                        response: "A wardrobe? How curious! Would you like to join me for tea?",
-                        effects: {
-                            relationship: 1,
-                            next: "tea_invitation"
-                        }
-                    },
-                    {
-                        text: "I'm lost",
-                        response: "Oh dear! Let me help you. My house is just nearby.",
-                        effects: {
-                            relationship: 1,
-                            next: "offer_help"
-                        }
-                    },
-                    {
-                        text: "What's a faun?",
-                        response: "We're creatures of the forest, half-man and half-goat.",
-                        effects: {
-                            knowledge: ["fauns"],
-                            next: "explain_narnia"
-                        }
-                    }
-                ]
-            },
-            tea_invitation: {
-                text: "My house is just around the corner. We'll have tea and cakes!",
-                options: [
-                    {
-                        text: "That sounds lovely",
-                        response: "Wonderful! Follow me!",
-                        effects: {
-                            relationship: 2,
-                            next: "at_tumnus_house"
-                        }
-                    },
-                    {
-                        text: "I should get back",
-                        response: "Oh... well, perhaps another time then.",
-                        effects: {
-                            relationship: -1,
-                            next: "end"
-                        }
-                    }
-                ]
-            }
-        },
-        beavers: {
-            first_meeting: {
-                text: "Psst! Over here! We need to talk about Aslan.",
-                options: [
-                    {
-                        text: "Who's Aslan?",
-                        response: "Why, he's the true king of Narnia! The great lion himself!",
-                        effects: {
-                            knowledge: ["aslan"],
-                            next: "explain_aslan"
-                        }
-                    },
-                    {
-                        text: "Why are we whispering?",
-                        response: "The trees have ears, and not all of them are on our side.",
-                        effects: {
-                            knowledge: ["spies"],
-                            next: "explain_danger"
-                        }
-                    }
-                ]
-            },
-            explain_aslan: {
-                text: "Aslan is on the move. The prophecy speaks of four children...",
-                options: [
-                    {
-                        text: "Tell me about the prophecy",
-                        response: "When Adam's flesh and Adam's bone sits at Cair Paravel in throne...",
-                        effects: {
-                            knowledge: ["prophecy"],
-                            next: "explain_prophecy"
-                        }
-                    },
-                    {
-                        text: "Is it safe to talk here?",
-                        response: "Come to our dam. We can speak freely there.",
-                        effects: {
-                            next: "invite_to_dam"
-                        }
-                    }
-                ]
-            }
-        }
+export const dialogueSystem = {
+    startDialogue: function (character, dialogueId) {
+        return null;
     },
-    
-    startDialogue: function(character, dialogueId) {
-        const dialogue = this.dialogues[character]?.[dialogueId];
-        if (!dialogue) return null;
-        
-        return {
-            text: dialogue.text,
-            options: dialogue.options.map(opt => ({
-                text: opt.text,
-                id: this.dialogues[character]?.[opt.effects.next] ? opt.effects.next : null
-            }))
-        };
-    },
-    
-    selectOption: function(character, dialogueId, optionIndex) {
-        const dialogue = this.dialogues[character]?.[dialogueId];
-        if (!dialogue || !dialogue.options[optionIndex]) return null;
-        
-        const option = dialogue.options[optionIndex];
-        const effects = option.effects;
-        
-        // Apply relationship changes
-        if (effects.relationship) {
-            relationshipSystem.updateRelationship(selectedCharacter, character, effects.relationship);
-        }
-        
-        // Add knowledge
-        if (effects.knowledge) {
-            effects.knowledge.forEach(knowledge => {
-                // Assuming we have a knowledge system
-                // knowledgeSystem.addKnowledge(knowledge);
-            });
-        }
-        
-        return {
-            response: option.response,
-            nextDialogue: effects.next === "end" ? null : effects.next
-        };
-    },
-    
-    getAvailableDialogues: function(character) {
-        return Object.keys(this.dialogues[character] || {}).filter(dialogueId => {
-            // Add conditions for dialogue availability here
-            return true;
-        });
-    },
-    
-    hasDialogue: function(character, dialogueId) {
-        return !!this.dialogues[character]?.[dialogueId];
+    selectOption: function () {
+        return null;
     }
 };
 
-// Export all systems
-export {
-    inventorySystem,
-    characterStats,
-    combatSystem,
-    questSystem,
-    relationshipSystem,
-    dialogueSystem
-}; 
+/** Wire inventory array to gameState; call once at startup. */
+export function initSystems() {
+    inventorySystem.inventory = gameState.inventory;
+}
+
+/** Ability hooks: return bonus for stat checks (0–3). */
+export function applyAbilityBonus(statName) {
+    const id = gameState.selectedCharacter;
+    if (!id || !characters[id]) return 0;
+    const ab = characters[id].abilityStat;
+    if (ab === statName) return 2;
+    return 0;
+}
+
+export function runStatCheck(statName, difficulty) {
+    const id = gameState.selectedCharacter;
+    if (!id) return false;
+    const base = characterStats.getStat(id, statName) || 0;
+    const roll = Math.floor(Math.random() * 6) + 1;
+    return base + roll + applyAbilityBonus(statName) >= difficulty;
+}
+
+const DEFAULT_STATS = {
+    peter: { name: 'Peter', health: 100, maxHealth: 100, combat: 3, leadership: 4, courage: 4, wisdom: 3, defense: 2 },
+    susan: { name: 'Susan', health: 100, maxHealth: 100, combat: 2, archery: 4, diplomacy: 4, wisdom: 4, courage: 3, defense: 1 },
+    edmund: { name: 'Edmund', health: 100, maxHealth: 100, combat: 2, stealth: 3, wisdom: 2, courage: 2, defense: 1 },
+    lucy: { name: 'Lucy', health: 100, maxHealth: 100, combat: 1, faith: 5, kindness: 5, wisdom: 3, courage: 3, defense: 0 },
+    maugrim: { name: 'Maugrim', health: 80, maxHealth: 80, combat: 4, defense: 2 }
+};
+
+export function resetCharacterStats() {
+    for (const k of Object.keys(DEFAULT_STATS)) {
+        characterStats.stats[k] = { ...DEFAULT_STATS[k] };
+    }
+}
