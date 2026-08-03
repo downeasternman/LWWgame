@@ -1,5 +1,5 @@
 import { characters } from './characters.js';
-import { gameState } from './game_state.js';
+import { gameState, resolveEndingId } from './game_state.js';
 
 function sel() {
     return gameState.selectedCharacter;
@@ -9,7 +9,7 @@ function ch() {
     return characters[sel()];
 }
 
-/** Scenes not defined in game.js (extensions + fixes for previously missing keys). */
+/** Scenes not defined in game.js (extensions + character branches + endings). */
 export const additionalScenes = {
     return: {
         text: function () {
@@ -32,10 +32,24 @@ export const additionalScenes = {
             }
         ]
     },
+    house_rain: {
+        text: function () {
+            return `Rain needles the windows. The Professor’s house is full of corridors and quiet. A spare room waits somewhere upstairs—the one with the wardrobe. Nothing else in these halls matters half so much.`;
+        },
+        choices: [
+            {
+                text: 'Return to the wardrobe room',
+                nextScene: 'start',
+                onSelect: () => {
+                    return 'Your feet know the way before your mind does.';
+                }
+            }
+        ]
+    },
     witch_info: {
         text: function () {
             const c = ch();
-            return `The Beavers speak in low voices. "The White Witch is the one who made it always winter and never Christmas," Mr. Beaver says. Mrs. Beaver glances at the window. "There are listeners in these woods—not all ears are friendly." ${c && c.name === 'susan' ? 'You feel the weight of what they are not saying.' : 'The room feels smaller.'}`;
+            return `The Beavers speak in low voices. "The White Witch is the one who made it always winter and never Christmas," Mr. Beaver says. Mrs. Beaver glances at the window. "There are listeners in these woods—not all ears are friendly." ${c && c.name === 'Lucy' ? 'You feel the weight of what they are not saying—and somehow you already believe the better half of it.' : 'The room feels smaller.'}`;
         },
         choices: [
             {
@@ -73,7 +87,123 @@ export const additionalScenes = {
                 nextScene: 'secret',
                 onSelect: () => {
                     gameState.secretHesitation += 1;
+                    gameState.siblingsBelieve = false;
                     return 'The words stick in your throat. Tomorrow, you tell yourself. Tomorrow.';
+                }
+            }
+        ]
+    },
+    lucy_believe_siblings: {
+        text: function () {
+            if (gameState.siblingsBelieve) {
+                return `Peter’s face is serious, not mocking. Susan asks careful questions. Even Edmund—watchful, sharp—doesn’t laugh. They believe you enough to follow. The wardrobe door looks less like a joke and more like a gate.`;
+            }
+            return `Susan’s mouth tightens. Peter tries to be kind and fails. Edmund smirks as if he has been waiting for you to be ridiculous. Belief will have to be earned in snow, not in this spare room.`;
+        },
+        choices: [
+            {
+                text: 'Lead them to the wardrobe anyway',
+                nextScene: 'group_wardrobe',
+                onSelect: () => {
+                    return 'You put your hand on the door. Someone has to go first.';
+                }
+            },
+            {
+                text: 'Go alone first—and bring proof back',
+                nextScene: 'wardrobe',
+                condition: () => !gameState.siblingsBelieve,
+                onSelect: () => {
+                    return 'If they will not trust words, perhaps they will trust what you can show them.';
+                }
+            }
+        ]
+    },
+    lucy_return_for_tumnus: {
+        text: function () {
+            if (gameState.relationships.tumnus >= 40 || gameState.tumnusSafe) {
+                gameState.tumnusSafe = true;
+                return `You find Mr. Tumnus’s cave empty at first—overturned chair, cold ashes—then a whisper from the trees. He is alive, frightened, and steadied by your return. "You came back," he says, as if that alone were a kind of magic.`;
+            }
+            return `The cave is worse than empty: frost on the hearth, a White Witch’s mark scratched near the door. You were too late to keep him safe. The wooden lion in your pocket feels heavier.`;
+        },
+        choices: [
+            {
+                text: 'Press on toward the Beavers’ dam',
+                nextScene: 'beavers_house',
+                onSelect: () => {
+                    gameState.gameProgress.metBeaver = true;
+                    if (gameState.tumnusSafe) {
+                        gameState.relationships.tumnus += 10;
+                        gameState.relationships.aslan += 2;
+                    } else {
+                        gameState.relationships.aslan -= 1;
+                    }
+                    return gameState.tumnusSafe
+                        ? 'Tumnus points you toward friends who still dare to hope.'
+                        : 'Grief sharpens into purpose. You will not leave Narnia as you found it.';
+                }
+            }
+        ]
+    },
+    edmund_lie_to_siblings: {
+        text: function () {
+            return `They ask where you have been. The truth sits on your tongue like sugar turned bitter. You could confess the sleigh, the sweetness, the promises—or you could make yourself look clever and them look small.`;
+        },
+        choices: [
+            {
+                text: 'Lie—say Lucy is imagining things (or say nothing true)',
+                nextScene: 'edmund_after_lie',
+                onSelect: () => {
+                    gameState.edmundLied = true;
+                    gameState.siblingsBelieve = false;
+                    gameState.relationships.siblings.lucy -= 15;
+                    gameState.relationships.siblings.peter -= 5;
+                    gameState.relationships.siblings.susan -= 5;
+                    gameState.relationships.witch += 5;
+                    return 'The lie is easy. Living with it will not be.';
+                }
+            },
+            {
+                text: 'Confess what you did—and how it frightened you',
+                nextScene: 'edmund_confess',
+                onSelect: () => {
+                    gameState.edmundLied = false;
+                    gameState.siblingsBelieve = true;
+                    gameState.relationships.siblings.lucy += 10;
+                    gameState.relationships.siblings.peter += 5;
+                    gameState.relationships.aslan += 3;
+                    gameState.relationships.witch -= 5;
+                    return 'Shame burns hotter than Turkish Delight. They stare—but they listen.';
+                }
+            }
+        ]
+    },
+    edmund_after_lie: {
+        text: function () {
+            return `Lucy’s eyes go bright with hurt. Peter tells everyone to stop quarreling. Inside, something in you leans toward the Witch’s promises again—toward being believed for the wrong reasons.`;
+        },
+        choices: [
+            {
+                text: 'Follow when they finally enter the wardrobe',
+                nextScene: 'group_wardrobe',
+                onSelect: () => {
+                    return 'You go along. You tell yourself you are only curious.';
+                }
+            }
+        ]
+    },
+    edmund_confess: {
+        text: function () {
+            return `Saying it aloud makes the Witch’s gifts look cheaper. Susan’s hand finds your shoulder. Peter looks older than he is. Lucy forgives faster than you deserve.`;
+        },
+        choices: [
+            {
+                text: 'Go with them into Narnia—together',
+                nextScene: 'group_wardrobe',
+                onSelect: () => {
+                    gameState.edmundPath = gameState.edmundPath === 'tempted' ? 'tempted' : 'redeemed';
+                    if (gameState.edmundPath === 'none') gameState.edmundPath = 'redeemed';
+                    return 'Whatever waits beyond the coats, you will not face it alone in secret.';
                 }
             }
         ]
@@ -81,51 +211,55 @@ export const additionalScenes = {
     prophecy_reveal: {
         text: function () {
             const c = ch();
-            return `Aslan’s voice is not loud, but it stills the camp. "When Adam’s flesh and Adam’s bone sits at Cair Paravel in throne, the evil time will be over and done." ${c && c.name === 'lucy' ? 'You feel the truth of it in your bones.' : 'You try to hold all the pieces together in your mind.'}`;
+            const edmundNote =
+                sel() === 'edmund' && gameState.edmundPath === 'betrayed'
+                    ? ' When Aslan looks at you, you feel seen through—and not discarded.'
+                    : '';
+            return `Aslan’s voice is not loud, but it stills the camp. "When Adam’s flesh and Adam’s bone sits at Cair Paravel in throne, the evil time will be over and done." ${c && c.name === 'Lucy' ? 'You feel the truth of it in your bones.' : 'You try to hold all the pieces together in your mind.'}${edmundNote}`;
         },
-        choices: [
-            {
-                text: 'Ask what must happen next',
-                nextScene: 'father_christmas_arrives',
-                onSelect: () => {
-                    return 'The air itself seems to wait for his answer.';
+        choices: function () {
+            const arr = [
+                {
+                    text: 'Ask what must happen next',
+                    nextScene: 'father_christmas_arrives',
+                    onSelect: () => {
+                        gameState.relationships.aslan += 5;
+                        return 'The air itself seems to wait for his answer.';
+                    }
                 }
+            ];
+            if (sel() === 'lucy' && characters.lucy.abilityStat === 'faith') {
+                arr.push({
+                    text: 'Speak your faith aloud—that Aslan’s coming is already changing the air',
+                    nextScene: 'father_christmas_arrives',
+                    onSelect: () => {
+                        gameState.relationships.aslan += 8;
+                        gameState.relationships.beaver += 5;
+                        return 'A few nearby creatures stand taller. Hope is contagious when someone names it.';
+                    }
+                });
             }
-        ]
+            return arr;
+        }
     },
     father_christmas_arrives: {
         text: function () {
             const id = sel();
             if (!gameState.gameProgress.receivedChristmasGifts) {
-                if (id === 'peter') {
-                    inventorySystem.addItem('sword');
-                    inventorySystem.addItem('shield');
-                    characterStats.applyItemEffects('peter', 'sword');
-                    characterStats.applyItemEffects('peter', 'shield');
-                } else if (id === 'susan') {
-                    inventorySystem.addItem('horn');
-                    inventorySystem.addItem('bow');
-                    characterStats.applyItemEffects('susan', 'bow');
-                } else if (id === 'lucy') {
+                if (id === 'lucy') {
                     inventorySystem.addItem('cordial');
                     inventorySystem.addItem('dagger');
-                    characterStats.applyItemEffects('lucy', 'dagger');
                 } else if (id === 'edmund') {
-                    /* Edmund’s true gifts are later—cordial may heal him after the battle */
-                    characterStats.updateStat('edmund', 'courage', 1);
+                    /* Mercy before metal—Edmund’s true gift is the road back */
+                    gameState.relationships.aslan += 3;
                 }
                 gameState.gameProgress.receivedChristmasGifts = true;
             }
-            const c = ch();
             const giftLine =
-                id === 'peter'
-                    ? 'You receive sword and shield—heavy with meaning, bright with promise.'
-                    : id === 'susan'
-                      ? 'A horn and a bow: call for help, and strike true.'
-                      : id === 'lucy'
-                        ? 'Cordial and dagger: heal the hurt, guard the small.'
-                        : 'You stand empty-handed for a moment—and then understand that mercy has already been given.';
-            return `A sleigh bells’ jingle—not witch-sleigh bells, but honest ones—cuts through the cold. Father Christmas is here. ${giftLine} ${c && c.name === 'peter' ? 'Your fingers close on hilt and shield-rim as if they were always meant to.' : ''}`;
+                id === 'lucy'
+                    ? 'Cordial and dagger: heal the hurt, guard the small.'
+                    : 'You stand empty-handed for a moment—and then understand that mercy has already been given.';
+            return `A sleigh bells’ jingle—not witch-sleigh bells, but honest ones—cuts through the cold. Father Christmas is here. ${giftLine}`;
         },
         choices: [
             {
@@ -140,7 +274,11 @@ export const additionalScenes = {
     stone_table_march: {
         text: function () {
             gameState.gameProgress.witnessedStoneTable = true;
-            return `The Stone Table stands on a green hill, older than old. The Witch’s voice is thin and terrible; the law she quotes feels like a chain. And yet Aslan does not flinch when the bargain turns toward Edmund’s life—and toward deeper magic than she knows.`;
+            const edmundLine =
+                sel() === 'edmund'
+                    ? ' You understand, with a sick clarity, that the law she quotes was aimed at you—and that Aslan does not flinch.'
+                    : ' And yet Aslan does not flinch when the bargain turns toward a traitor’s life—and toward deeper magic than she knows.';
+            return `The Stone Table stands on a green hill, older than old. The Witch’s voice is thin and terrible; the law she quotes feels like a chain.${edmundLine}`;
         },
         choices: [
             {
@@ -154,6 +292,13 @@ export const additionalScenes = {
     },
     stone_table_sacrifice: {
         text: function () {
+            if (sel() === 'edmund' && gameState.edmundPath === 'betrayed') {
+                gameState.edmundPath = 'redeemed';
+                gameState.relationships.aslan += 10;
+            } else if (sel() === 'edmund' && gameState.edmundPath === 'tempted') {
+                gameState.edmundPath = 'redeemed';
+                gameState.relationships.aslan += 5;
+            }
             return `What happens on the Table is too great for loud words. When it is over, the world feels wrong—until morning, when the Table cracks and hope returns in a roar of breath and light. "If the Witch knew the whole story," someone whispers, "perhaps she would have been more careful."`;
         },
         choices: [
@@ -161,7 +306,6 @@ export const additionalScenes = {
                 text: 'Rise with the dawn',
                 nextScene: 'maugrim_duel',
                 onSelect: () => {
-                    gameState.edmundPath = 'redeemed';
                     return 'There is no time to stand still. Narnia still needs you.';
                 }
             }
@@ -169,29 +313,87 @@ export const additionalScenes = {
     },
     maugrim_duel: {
         text: function () {
-            const weapon = inventorySystem.hasItem('sword') ? 'sword' : inventorySystem.hasItem('dagger') ? 'dagger' : null;
-            characterStats.stats.peter.health = characterStats.stats.peter.maxHealth;
-            characterStats.stats.maugrim.health = characterStats.stats.maugrim.maxHealth;
-            const peterFight = combatSystem.handleCombat('peter', 'maugrim', weapon || undefined, null);
-            const summary = peterFight.log.slice(0, 4).join(' ');
-            gameState.gameProgress.maugrimDefeated = true;
-            characterStats.heal('peter', 15);
-            return `Maugrim lunges—wolf-hot breath, cruel speed. Peter meets him ${weapon ? 'steel in hand' : 'with desperate courage'}. ${summary} The pack falters when its captain falls.`;
-        },
-        choices: [
-            {
-                text: 'Press on to the great battle',
-                nextScene: 'battle_preparation',
-                onSelect: () => {
-                    return 'Horns and paws and hooves: the army gathers.';
-                }
+            const id = sel();
+            if (id === 'lucy') {
+                return `Maugrim lunges toward the camp’s edge—wolf-hot breath, cruel speed. Peter steps forward with a shout. You are not the swordsman here—but you can steady the line, cry warning, or dart in with your dagger if courage outruns sense.`;
             }
-        ]
+            return `Maugrim lunges—wolf-hot breath, cruel speed. Peter meets him, but the fight spills toward you. How you answer will say what kind of king you are becoming.`;
+        },
+        choices: function () {
+            const id = sel();
+            if (id === 'lucy') {
+                return [
+                    {
+                        text: 'Cry warning and hold the others steady',
+                        nextScene: 'battle_preparation',
+                        onSelect: () => {
+                            gameState.gameProgress.maugrimDefeated = true;
+                            gameState.relationships.aslan += 3;
+                            gameState.relationships.siblings.peter += 5;
+                            return 'Your voice cuts through panic. Peter’s blade finds its mark.';
+                        }
+                    },
+                    {
+                        text: 'Use your dagger to distract Maugrim',
+                        nextScene: 'battle_preparation',
+                        condition: () => inventorySystem.hasItem('dagger'),
+                        onSelect: () => {
+                            gameState.gameProgress.maugrimDefeated = true;
+                            gameState.relationships.aslan += 5;
+                            return 'Steel flashes small and bright. The wolf falters—long enough.';
+                        }
+                    },
+                    {
+                        text: 'Shrink back and let Peter finish it',
+                        nextScene: 'battle_preparation',
+                        onSelect: () => {
+                            gameState.gameProgress.maugrimDefeated = true;
+                            return 'The pack falters when its captain falls. You are alive—and quieter inside.';
+                        }
+                    }
+                ];
+            }
+            return [
+                {
+                    text: 'Stand with Peter—fight as you can',
+                    nextScene: 'battle_preparation',
+                    onSelect: () => {
+                        gameState.gameProgress.maugrimDefeated = true;
+                        gameState.relationships.aslan += 4;
+                        gameState.edmundPath = 'redeemed';
+                        return 'You do not run. That, today, is victory enough—and more.';
+                    }
+                },
+                {
+                    text: 'Flank through the trees (stealth)',
+                    nextScene: 'battle_preparation',
+                    onSelect: () => {
+                        gameState.gameProgress.maugrimDefeated = true;
+                        gameState.relationships.aslan += 2;
+                        return 'You come at Maugrim from the side. Surprise is a kind of courage.';
+                    }
+                },
+                {
+                    text: 'Hesitate—old fear still has teeth',
+                    nextScene: 'battle_preparation',
+                    onSelect: () => {
+                        gameState.gameProgress.maugrimDefeated = true;
+                        gameState.relationships.witch += 3;
+                        gameState.relationships.aslan -= 2;
+                        return 'Peter wins without you. The camp is safe. Your stomach is not.';
+                    }
+                }
+            ];
+        }
     },
     battle_support: {
         text: function () {
             const c = ch();
-            return `You hold the line from the rear—binding wounds, shouting warnings, steadying those who falter. ${c && c.name === 'susan' ? 'Your horn is cold against your side; you use it once, and help answers.' : 'The battle noise rolls over you like surf.'}`;
+            const horn =
+                inventorySystem.hasItem('horn')
+                    ? ' A horn hangs at someone’s side; help answers when it is blown.'
+                    : '';
+            return `You hold the line from the rear—binding wounds, shouting warnings, steadying those who falter. ${c && c.name === 'Lucy' ? 'Your cordial is a small sun in your pocket.' : 'The battle noise rolls over you like surf.'}${horn}`;
         },
         choices: [
             {
@@ -207,7 +409,7 @@ export const additionalScenes = {
         text: function () {
             gameState.gameProgress.foundCairParavel = true;
             const c = ch();
-            return `Narnia in spring is almost too bright after endless winter. Rivers shout; trees unclench their fingers. ${c && c.name === 'lucy' ? 'You laugh without meaning to.' : 'You walk carefully, as if the world might vanish.'}`;
+            return `Narnia in spring is almost too bright after endless winter. Rivers shout; trees unclench their fingers. ${c && c.name === 'Lucy' ? 'You laugh without meaning to.' : 'You walk carefully, as if the world might vanish.'}`;
         },
         choices: [
             {
@@ -223,24 +425,38 @@ export const additionalScenes = {
         text: function () {
             return `You and Mr. Tumnus take a longer way: a frozen waterfall like a stopped shout, a stand of trees where the snow thins. Everywhere there are stories if you know how to listen.`;
         },
-        choices: [
-            {
-                text: 'Ask Tumnus about the Beavers’ dam',
-                nextScene: 'beavers_house',
-                onSelect: () => {
-                    gameState.gameProgress.metBeaver = true;
-                    gameState.relationships.tumnus += 5;
-                    return '"Friends of mine," he says. "You’ll be safe with them."';
+        choices: function () {
+            const arr = [
+                {
+                    text: 'Ask Tumnus about the Beavers’ dam',
+                    nextScene: 'beavers_house',
+                    onSelect: () => {
+                        gameState.gameProgress.metBeaver = true;
+                        gameState.relationships.tumnus += 5;
+                        return '"Friends of mine," he says. "You’ll be safe with them."';
+                    }
+                },
+                {
+                    text: 'Return toward the lamppost',
+                    nextScene: 'lamppost',
+                    onSelect: () => {
+                        return 'The lamppost’s glow steadies you like a promise.';
+                    }
                 }
-            },
-            {
-                text: 'Return toward the lamppost',
-                nextScene: 'lamppost',
-                onSelect: () => {
-                    return 'The lamppost’s glow steadies you like a promise.';
-                }
+            ];
+            if (sel() === 'lucy' && gameState.relationships.tumnus >= 30) {
+                arr.unshift({
+                    text: 'Promise you will come back for him if danger comes',
+                    nextScene: 'lucy_return_for_tumnus',
+                    onSelect: () => {
+                        gameState.tumnusSafe = true;
+                        gameState.relationships.tumnus += 10;
+                        return 'He squeezes your hand. The promise becomes a road.';
+                    }
+                });
             }
-        ]
+            return arr;
+        }
     },
     edmund_temptation_start: {
         text: function () {
@@ -254,16 +470,39 @@ export const additionalScenes = {
                     gameState.edmundPath = 'tempted';
                     gameState.relationships.witch += 15;
                     inventorySystem.addItem('turkishDelight');
-                    characterStats.updateStat('edmund', 'courage', -1);
                     return 'It is all sweetness and no nourishment. You want more. You always want more.';
                 }
             },
             {
                 text: 'Refuse and step back',
-                nextScene: 'wardrobe',
+                nextScene: 'edmund_refused_delight',
                 onSelect: () => {
                     gameState.relationships.witch -= 5;
+                    gameState.relationships.aslan += 2;
+                    gameState.edmundPath = 'redeemed';
                     return 'Your mouth waters, but you turn away. The sleigh slides off into the grey.';
+                }
+            }
+        ]
+    },
+    edmund_refused_delight: {
+        text: function () {
+            return `Pride still itches. You did not take her candy—but you have not yet chosen who you will be when no one is watching.`;
+        },
+        choices: [
+            {
+                text: 'Find the lamppost and the path of your siblings',
+                nextScene: 'lamppost',
+                onSelect: () => {
+                    gameState.gameProgress.foundLampPost = true;
+                    return 'Light first. Sweetness later—if ever.';
+                }
+            },
+            {
+                text: 'Return through the wardrobe and face them honestly',
+                nextScene: 'return_to_house',
+                onSelect: () => {
+                    return 'England first. Truth before another secret snow.';
                 }
             }
         ]
@@ -274,10 +513,17 @@ export const additionalScenes = {
         },
         choices: [
             {
-                text: 'Return to the lamppost and your siblings’ path',
+                text: 'Return home—and decide what to tell them',
+                nextScene: 'edmund_lie_to_siblings',
+                onSelect: () => {
+                    return 'You wipe crumbs from your mittens. The house will ask questions.';
+                }
+            },
+            {
+                text: 'Drift back toward the lamppost first',
                 nextScene: 'lamppost',
                 onSelect: () => {
-                    return 'You wipe crumbs from your mittens and hurry, already rehearsing lies.';
+                    return 'You hurry, already rehearsing half-truths.';
                 }
             }
         ]
@@ -293,6 +539,7 @@ export const additionalScenes = {
                 onSelect: () => {
                     gameState.edmundPath = 'betrayed';
                     gameState.relationships.aslan -= 5;
+                    gameState.relationships.witch += 10;
                     return 'Her castle rises ahead—iron and ice.';
                 }
             },
@@ -301,6 +548,7 @@ export const additionalScenes = {
                 nextScene: 'journey_to_aslan',
                 onSelect: () => {
                     gameState.edmundPath = 'redeemed';
+                    gameState.relationships.aslan += 5;
                     return 'You clench your fists until your hands hurt, and stay.';
                 }
             }
@@ -323,8 +571,23 @@ export const additionalScenes = {
     },
     epilogue_wardrobe: {
         text: function () {
+            const ending = resolveEndingId();
+            const scene = additionalScenes[ending];
+            return typeof scene.text === 'function' ? scene.text() : scene.text;
+        },
+        choices: function () {
+            const ending = resolveEndingId();
+            const raw = additionalScenes[ending].choices;
+            return typeof raw === 'function' ? raw() : raw;
+        }
+    },
+    ending_joyous: {
+        text: function () {
             const c = ch();
-            return `Back through the wardrobe: coats, mothballs, England. Time has barely stirred. ${c && c.name === 'lucy' ? 'You glance at your sister and realize, with a shock, that you are taller than you were—or she is shorter—or both.' : 'You touch the wooden door and wonder which world is the dream.'}`;
+            if (sel() === 'lucy') {
+                return `Back through the wardrobe: coats, mothballs, England. Time has barely stirred. Yet something in you is taller—belief that held, friends kept, a wooden lion’s promise kept too. ${c ? 'You glance at your siblings and know they will remember.' : ''}`;
+            }
+            return `Back through the wardrobe: coats, mothballs, England. You did not take every poisoned gift. Mercy found you—and you did not spit it out. The Professor’s house feels less like a cage and more like a beginning.`;
         },
         choices: [
             {
@@ -338,14 +601,69 @@ export const additionalScenes = {
                 text: 'Play again (reset story)',
                 nextScene: 'character_selection',
                 onSelect: () => {
-                    return 'The wardrobe waits for the next time.';
+                    return 'The wardrobe waits for the next telling.';
+                }
+            }
+        ]
+    },
+    ending_bittersweet: {
+        text: function () {
+            if (sel() === 'edmund') {
+                return `England again. The war is won in Narnia, and spring came—but you still taste metal under sweetness when you remember the sleigh. You are forgiven more than you feel. That, too, is a kind of winter thawing slowly.`;
+            }
+            return `England again. Narnia was real—you will swear it—but not every friendship was kept, not every word spoken in time. Joy and ache share the same spare room. The wardrobe looks ordinary. You know better.`;
+        },
+        choices: [
+            {
+                text: 'Speak to the Professor about what happened',
+                nextScene: 'professor_closing',
+                onSelect: () => {
+                    return 'He listens. His eyes suggest he has heard stranger true things.';
+                }
+            },
+            {
+                text: 'Play again (reset story)',
+                nextScene: 'character_selection',
+                onSelect: () => {
+                    return 'Another path may mend what this one left frayed.';
+                }
+            }
+        ]
+    },
+    ending_hollow: {
+        text: function () {
+            if (sel() === 'edmund') {
+                return `You return with the others crowned in memory—but something in you still leans toward the cold voice that called you important. Victory outside; a locked room inside. The Professor’s house smells of rain. You do not open the wardrobe again today.`;
+            }
+            return `You came back. The adventure happened. Yet Tumnus’s absence—or your siblings’ disbelief—hangs like frost that never quite melts. Narnia was wonderful. Wonder without kept promises feels thinner than it should.`;
+        },
+        choices: [
+            {
+                text: 'Speak to the Professor anyway',
+                nextScene: 'professor_closing',
+                onSelect: () => {
+                    return 'Even hollow stories deserve a listener.';
+                }
+            },
+            {
+                text: 'Play again (reset story)',
+                nextScene: 'character_selection',
+                onSelect: () => {
+                    return 'Perhaps the next telling will choose differently.';
                 }
             }
         ]
     },
     professor_closing: {
         text: function () {
-            return `The Professor’s face is hard to read. "How do you know," he asks mildly, "which of your friends would not have said much the same?" You leave the room less certain of everything—and more certain of one thing: the wardrobe will be waiting.`;
+            const ending = resolveEndingId();
+            if (ending === 'ending_hollow') {
+                return `The Professor’s face is hard to read. "Logic!" he says gently—and then, quieter: "Still—be careful of doors." You leave less certain of everything, and more aware of what you left undone.`;
+            }
+            if (ending === 'ending_joyous') {
+                return `The Professor nods as if you have confirmed a private theory. "Of course," he murmurs. "Of course there are other worlds." You leave the room lighter—and listening for sleigh bells that are not hers.`;
+            }
+            return `The Professor’s face is hard to read. "How do you know," he asks mildly, "which of your friends would not have said much the same?" You leave less certain of everything—and more certain of one thing: the wardrobe will be waiting.`;
         },
         choices: [
             {
@@ -368,30 +686,6 @@ export const inventorySystem = {
             type: 'charm',
             effects: { faith: 1 }
         },
-        sword: {
-            name: "Peter's Sword",
-            description: 'Rhindon—gift of Father Christmas',
-            type: 'weapon',
-            effects: { combat: 3, confidence: 2 }
-        },
-        shield: {
-            name: "Peter's Shield",
-            description: 'Sturdy, with a red lion',
-            type: 'armor',
-            effects: { defense: 2, confidence: 1 }
-        },
-        horn: {
-            name: "Susan's Horn",
-            description: 'Summons help when blown',
-            type: 'magic',
-            effects: { summonHelp: 1 }
-        },
-        bow: {
-            name: "Susan's Bow",
-            description: 'Straight and true',
-            type: 'weapon',
-            effects: { combat: 2, accuracy: 3 }
-        },
         cordial: {
             name: "Lucy's Cordial",
             description: 'Heals wound and pain',
@@ -410,11 +704,11 @@ export const inventorySystem = {
             type: 'consumable',
             effects: { health: 1, addiction: 1 }
         },
-        tools: {
-            name: 'Repair Tools',
-            description: 'For dam repairs',
-            type: 'utility',
-            effects: { repair: 2 }
+        horn: {
+            name: "Susan's Horn",
+            description: 'Summons help when blown',
+            type: 'magic',
+            effects: { summonHelp: 1 }
         }
     },
     inventory: [],
@@ -437,251 +731,15 @@ export const inventorySystem = {
     hasItem: function (itemName) {
         return this.inventory.includes(itemName);
     },
+    getItemName: function (itemName) {
+        return this.items[itemName]?.name || itemName;
+    },
     getItemEffects: function (itemName) {
         return this.items[itemName]?.effects || {};
-    }
-};
-
-export const characterStats = {
-    stats: {
-        peter: { name: 'Peter', health: 100, maxHealth: 100, combat: 3, leadership: 4, courage: 4, wisdom: 3, defense: 2 },
-        susan: { name: 'Susan', health: 100, maxHealth: 100, combat: 2, archery: 4, diplomacy: 4, wisdom: 4, courage: 3, defense: 1 },
-        edmund: { name: 'Edmund', health: 100, maxHealth: 100, combat: 2, stealth: 3, wisdom: 2, courage: 2, defense: 1 },
-        lucy: { name: 'Lucy', health: 100, maxHealth: 100, combat: 1, faith: 5, kindness: 5, wisdom: 3, courage: 3, defense: 0 },
-        maugrim: { name: 'Maugrim', health: 80, maxHealth: 80, combat: 4, defense: 2 }
-    },
-    updateStat: function (character, stat, value) {
-        if (this.stats[character] && this.stats[character][stat] !== undefined) {
-            this.stats[character][stat] += value;
-            return true;
-        }
-        return false;
-    },
-    getStat: function (character, stat) {
-        return this.stats[character]?.[stat] || 0;
-    },
-    applyItemEffects: function (character, itemName) {
-        const effects = inventorySystem.getItemEffects(itemName);
-        for (const [stat, value] of Object.entries(effects)) {
-            if (stat === 'healing' || stat === 'summonHelp' || stat === 'addiction' || stat === 'health') continue;
-            this.updateStat(character, stat, value);
-        }
-    },
-    removeItemEffects: function (character, itemName) {
-        const effects = inventorySystem.getItemEffects(itemName);
-        for (const [stat, value] of Object.entries(effects)) {
-            if (stat === 'healing' || stat === 'summonHelp' || stat === 'addiction' || stat === 'health') continue;
-            this.updateStat(character, stat, -value);
-        }
-    },
-    checkHealth: function (character) {
-        return this.stats[character]?.health || 0;
-    },
-    heal: function (character, amount) {
-        if (this.stats[character]) {
-            this.stats[character].health = Math.min(this.stats[character].health + amount, this.stats[character].maxHealth);
-            return true;
-        }
-        return false;
-    },
-    takeDamage: function (character, amount) {
-        if (this.stats[character]) {
-            this.stats[character].health = Math.max(this.stats[character].health - amount, 0);
-            return this.stats[character].health > 0;
-        }
-        return false;
-    }
-};
-
-export const combatSystem = {
-    calculateDamage: function (attacker, defender, weapon = null) {
-        let power = 8 + characterStats.getStat(attacker, 'combat');
-        const soak = characterStats.getStat(defender, 'defense') + Math.floor(characterStats.getStat(defender, 'combat') / 2);
-        if (weapon) {
-            const w = inventorySystem.getItemEffects(weapon);
-            power += w.combat || 0;
-            power += w.accuracy || 0;
-        }
-        return Math.max(1, power - soak);
-    },
-    performAttack: function (attacker, defender, weapon = null) {
-        const damage = this.calculateDamage(attacker, defender, weapon);
-        const isAlive = characterStats.takeDamage(defender, damage);
-        return {
-            damage,
-            isAlive,
-            attacker: characterStats.stats[attacker].name,
-            defender: characterStats.stats[defender].name
-        };
-    },
-    checkCombatOutcome: function (character1, character2) {
-        const h1 = characterStats.checkHealth(character1);
-        const h2 = characterStats.checkHealth(character2);
-        if (h1 <= 0) return { winner: character2, loser: character1 };
-        if (h2 <= 0) return { winner: character1, loser: character2 };
-        return null;
-    },
-    handleCombat: function (character1, character2, weapon1 = null, weapon2 = null) {
-        const log = [];
-        let rounds = 0;
-        while (rounds < 12) {
-            rounds++;
-            const a1 = this.performAttack(character1, character2, weapon1);
-            log.push(`${a1.attacker} strikes ${a1.defender} for ${a1.damage} damage.`);
-            const o = this.checkCombatOutcome(character1, character2);
-            if (o) {
-                log.push(`${characterStats.stats[o.winner].name} prevails.`);
-                return { winner: o.winner, loser: o.loser, log };
-            }
-            const a2 = this.performAttack(character2, character1, weapon2);
-            log.push(`${a2.attacker} strikes ${a2.defender} for ${a2.damage} damage.`);
-            const o2 = this.checkCombatOutcome(character1, character2);
-            if (o2) {
-                log.push(`${characterStats.stats[o2.winner].name} prevails.`);
-                return { winner: o2.winner, loser: o2.loser, log };
-            }
-        }
-        log.push('The fight breaks off as reinforcements arrive.');
-        return { winner: character1, loser: character2, log };
-    }
-};
-
-export const questSystem = {
-    quests: {
-        main: {
-            meetAslan: {
-                title: 'Reach Aslan’s camp',
-                description: 'Follow the prophecy toward the true King',
-                status: 'available',
-                requirements: {},
-                rewards: { relationships: { aslan: 10 } }
-            },
-            defeatWitch: {
-                title: 'Break the endless winter',
-                description: 'Face the White Witch’s power',
-                status: 'locked',
-                requirements: { completedQuests: ['meetAslan'], relationships: { aslan: 5 } },
-                rewards: { relationships: { aslan: 20 } }
-            }
-        },
-        side: {
-            helpBeavers: {
-                title: 'Help the Beavers',
-                description: 'Earn trust at the dam',
-                status: 'available',
-                requirements: {},
-                rewards: { relationships: { beaver: 15 } }
-            }
-        }
-    },
-    checkRequirements: function (questId) {
-        const quest = this.quests.main[questId] || this.quests.side[questId];
-        if (!quest) return false;
-        const rel = gameState.relationships;
-        if (quest.requirements.items) {
-            for (const item of quest.requirements.items) {
-                if (!inventorySystem.hasItem(item)) return false;
-            }
-        }
-        if (quest.requirements.relationships) {
-            for (const [key, level] of Object.entries(quest.requirements.relationships)) {
-                const v = rel[key];
-                if (v === undefined || v < level) return false;
-            }
-        }
-        if (quest.requirements.completedQuests) {
-            for (const rq of quest.requirements.completedQuests) {
-                if (!gameState.completedQuestIds.includes(rq)) return false;
-            }
-        }
-        return true;
-    },
-    startQuest: function (questId) {
-        const quest = this.quests.main[questId] || this.quests.side[questId];
-        if (!quest || quest.status !== 'available') return false;
-        if (this.checkRequirements(questId)) {
-            quest.status = 'inProgress';
-            gameState.activeQuestId = questId;
-            return true;
-        }
-        return false;
-    },
-    completeQuest: function (questId) {
-        const quest = this.quests.main[questId] || this.quests.side[questId];
-        if (!quest) return false;
-        if (gameState.completedQuestIds.includes(questId)) return false;
-        quest.status = 'completed';
-        gameState.completedQuestIds.push(questId);
-        if (quest.rewards && quest.rewards.relationships) {
-            for (const [k, value] of Object.entries(quest.rewards.relationships)) {
-                if (gameState.relationships[k] !== undefined) gameState.relationships[k] += value;
-            }
-        }
-        if (questId === 'meetAslan' && this.quests.main.defeatWitch) {
-            this.quests.main.defeatWitch.status = 'available';
-        }
-        return true;
-    },
-    getAvailableQuests: function () {
-        const out = [];
-        for (const [id, q] of Object.entries(this.quests.main)) {
-            if (q.status === 'available') out.push({ id, ...q });
-        }
-        for (const [id, q] of Object.entries(this.quests.side)) {
-            if (q.status === 'available') out.push({ id, ...q });
-        }
-        return out;
-    }
-};
-
-export const relationshipSystem = {
-    updateSiblingTrust: function (who, delta) {
-        const s = gameState.relationships.siblings;
-        if (s[who] !== undefined) s[who] = Math.max(0, Math.min(100, s[who] + delta));
-    }
-};
-
-export const dialogueSystem = {
-    startDialogue: function (character, dialogueId) {
-        return null;
-    },
-    selectOption: function () {
-        return null;
     }
 };
 
 /** Wire inventory array to gameState; call once at startup. */
 export function initSystems() {
     inventorySystem.inventory = gameState.inventory;
-}
-
-/** Ability hooks: return bonus for stat checks (0–3). */
-export function applyAbilityBonus(statName) {
-    const id = gameState.selectedCharacter;
-    if (!id || !characters[id]) return 0;
-    const ab = characters[id].abilityStat;
-    if (ab === statName) return 2;
-    return 0;
-}
-
-export function runStatCheck(statName, difficulty) {
-    const id = gameState.selectedCharacter;
-    if (!id) return false;
-    const base = characterStats.getStat(id, statName) || 0;
-    const roll = Math.floor(Math.random() * 6) + 1;
-    return base + roll + applyAbilityBonus(statName) >= difficulty;
-}
-
-const DEFAULT_STATS = {
-    peter: { name: 'Peter', health: 100, maxHealth: 100, combat: 3, leadership: 4, courage: 4, wisdom: 3, defense: 2 },
-    susan: { name: 'Susan', health: 100, maxHealth: 100, combat: 2, archery: 4, diplomacy: 4, wisdom: 4, courage: 3, defense: 1 },
-    edmund: { name: 'Edmund', health: 100, maxHealth: 100, combat: 2, stealth: 3, wisdom: 2, courage: 2, defense: 1 },
-    lucy: { name: 'Lucy', health: 100, maxHealth: 100, combat: 1, faith: 5, kindness: 5, wisdom: 3, courage: 3, defense: 0 },
-    maugrim: { name: 'Maugrim', health: 80, maxHealth: 80, combat: 4, defense: 2 }
-};
-
-export function resetCharacterStats() {
-    for (const k of Object.keys(DEFAULT_STATS)) {
-        characterStats.stats[k] = { ...DEFAULT_STATS[k] };
-    }
 }
